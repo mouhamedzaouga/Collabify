@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collabify — Gestion de Projets Étudiants</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --night:#f0f2f7;--deep:#ffffff;--card:#ffffff;--card2:#f7f8fc;
+  --line:#e4e7f0;--line2:#d0d4e4;
+  --ink:#1a1a2e;--ink2:#4a4a72;--ink3:#8888aa;
+  --lime:#4f46e5;--lime2:#3730c4;--lime3:#eeedfd;
+  --rose:#ef4444;--sky:#3b82f6;--amber:#f59e0b;--violet:#8b5cf6;
+  --r:14px;--r2:10px;--r3:6px;
+}
+body{font-family:'Cabinet Grotesk',sans-serif;background:var(--night);color:var(--ink);min-height:100vh;overflow:hidden}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#f0f2f7 0%,#e8eaf6 100%);z-index:9999;display:flex;align-items:center;justify-content:center}
+#login-screen.hidden{display:none}
+.login-box{width:420px;background:var(--deep);border:1px solid var(--line);border-radius:20px;padding:40px 36px;box-shadow:0 8px 40px rgba(79,70,229,.12)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.login-logo .logo-mark{width:42px;height:42px;background:var(--lime);border-radius:12px;display:grid;place-items:center}
+.login-title{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--ink3);text-align:center;margin-bottom:28px}
+.login-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.role-card{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:16px 12px;cursor:pointer;text-align:center;transition:all .2s}
+.role-card:hover{border-color:var(--line2);background:#f0eeff}
+.role-card.selected{border-color:var(--lime);background:#eeedfd}
+.role-card .rc-icon{font-size:26px;margin-bottom:8px}
+.role-card .rc-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.role-card .rc-user{font-size:11px;color:var(--ink3)}
+.login-divider{text-align:center;font-size:11px;color:var(--ink3);margin:20px 0;position:relative}
+.login-divider::before,.login-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--line)}
+.login-divider::before{left:0}.login-divider::after{right:0}
+.login-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--rose);font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:16px;display:none}
+.login-error.show{display:block}
+
+/* ── LAYOUT ── */
+h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
+.shell{display:flex;height:100vh}
+.rail{width:220px;background:var(--deep);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;position:relative;z-index:10}
+.stage{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.topbar{height:58px;background:var(--deep);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0}
+.workspace{flex:1;overflow-y:auto;padding:24px}
+
+/* ── RAIL ── */
+.rail-logo{padding:22px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.logo-mark{width:30px;height:30px;background:var(--lime);border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.logo-mark svg{width:16px;height:16px}
+.brand-name{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.3px}
+.brand-name span{color:var(--lime)}
+.rail-section{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--ink3);padding:16px 18px 6px;text-transform:uppercase}
+.rail-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:var(--r3);cursor:pointer;font-size:13px;color:var(--ink2);transition:all .18s;position:relative}
+.rail-item:hover{background:var(--card2);color:var(--ink)}
+.rail-item.on{background:var(--lime3);color:var(--lime);font-weight:600}
+.rail-item.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--lime);border-radius:0 3px 3px 0}
+.ri{font-size:15px;width:18px;text-align:center}
+.rbadge{margin-left:auto;background:var(--lime3);color:var(--lime);font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px}
+.rail-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line)}
+.me-card{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r2);background:var(--card2);cursor:pointer;transition:all .2s}
+.me-card:hover{background:var(--line2)}
+.ava{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;color:#fff}
+
+/* ── TOPBAR ── */
+.tb-title{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:600;color:var(--ink);flex:1}
+.tb-search{position:relative;display:flex;align-items:center}
+.tb-search input{background:var(--card2);border:1px solid var(--line);border-radius:var(--r2);padding:8px 12px 8px 34px;font-size:13px;color:var(--ink);font-family:inherit;outline:none;width:240px;transition:all .2s}
+.tb-search input:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(79,70,229,.08);width:280px}
+.tb-search input::placeholder{color:var(--ink3)}
+.tb-search .search-icon{position:absolute;left:10px;font-size:13px;color:var(--ink3);pointer-events:none}
+#search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--deep);border:1px solid var(--line);border-radius:var(--r2);box-shadow:0 8px 24px rgba(79,70,229,.12);z-index:100;max-height:280px;overflow-y:auto;display:none}
+#search-results.show{display:block}
+.sr-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--line)}
+.sr-item:last-child{border-bottom:none}
+.sr-item:hover{background:var(--card2)}
+.sr-icon{font-size:16px;width:28px;height:28px;background:var(--lime3);border-radius:6px;display:grid;place-items:center;flex-shrink:0}
+.sr-label{font-size:13px;font-weight:500;color:var(--ink)}
+.sr-sub{font-size:11px;color:var(--ink3)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Cabinet Grotesk',sans-serif;transition:all .18s;white-space:nowrap}
+.btn-lime{background:var(--lime);color:#fff;font-weight:700}
+.btn-lime:hover{background:var(--lime2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.3)}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--line2)}
+.btn-ghost:hover{background:var(--card2);color:var(--ink)}
+.btn-danger{background:rgba(239,68,68,.08);color:var(--rose);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:rgba(239,68,68,.15)}
+.btn-sky{background:rgba(59,130,246,.08);color:var(--sky);border:1px solid rgba(59,130,246,.2)}
+.btn-sky:hover{background:rgba(59,130,246,.15)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+
+/* ── VIEWS ── */
+.view{display:none}
+.view.on{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+.card-title{font-family:'Clash Display',sans-serif;font-size:14px;font-weight:600;color:var(--ink)}
+.card-body{padding:18px}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.flex{display:flex;align-items:center}
+.gap8{gap:8px}.gap12{gap:12px}.gap16{gap:16px}
+.ml-auto{margin-left:auto}
+
+/* ── STATS ── */
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;transition:all .25s}
+.stat:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:0 4px 16px rgba(79,70,229,.08)}
+.stat-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.stat-label{font-size:11px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-val{font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;color:var(--ink)}
+.stat-sub{font-size:11px;color:var(--ink3);margin-top:4px}
+.stat-ico{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:26px;opacity:.08}
+
+/* ── DEADLINE WARNINGS ── */
+.deadline-warn{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:var(--r2);padding:8px 12px;font-size:12px;color:var(--rose);display:flex;align-items:center;gap:6px}
+.deadline-ok{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:var(--r2);padding:4px 10px;font-size:11px;color:var(--sky)}
+.deadline-due{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--r2);padding:4px 10px;font-size:11px;color:var(--rose);font-weight:700}
+.deadline-soon{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--r2);padding:4px 10px;font-size:11px;color:var(--amber);font-weight:700}
+
+/* ── PROJECT CARDS ── */
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.proj-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.proj-card:hover{border-color:var(--line2);transform:translateY(-3px);box-shadow:0 8px 30px rgba(79,70,229,.1)}
+.proj-name{font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.proj-desc{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:14px}
+.proj-stats{display:flex;gap:12px;font-size:11px;color:var(--ink3);margin-bottom:14px}
+.proj-stat{display:flex;align-items:center;gap:4px}
+.proj-members{display:flex;margin-bottom:14px}
+.proj-ava{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;border:2px solid var(--card);margin-left:-6px;color:#fff}
+.proj-ava:first-child{margin-left:0}
+.prog-bar{height:4px;background:var(--line2);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .6s}
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.sp-active{background:rgba(79,70,229,.1);color:var(--lime)}
+.sp-done{background:rgba(59,130,246,.1);color:var(--sky)}
+.sp-paused{background:rgba(245,158,11,.1);color:var(--amber)}
+
+/* ── TASKS ── */
+.kanban-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kb-col{background:var(--card);border:1px solid var(--line);border-radius:var(--r);min-height:300px}
+.kb-col-head{padding:13px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.kb-col-title{font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.7px;flex:1}
+.kb-col-cnt{background:var(--line2);color:var(--ink3);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.kb-body{padding:10px;display:flex;flex-direction:column;gap:8px}
+.task-card{background:var(--card2);border:1px solid var(--line);border-radius:var(--r2);padding:12px;transition:all .18s;cursor:pointer}
+.task-card:hover{border-color:var(--lime);background:var(--lime3)}
+.task-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:8px;line-height:1.4}
+.task-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.pri-h{background:rgba(239,68,68,.1);color:var(--rose)}
+.pri-m{background:rgba(245,158,11,.1);color:var(--amber)}
+.pri-l{background:rgba(59,130,246,.1);color:var(--sky)}
+.t-tag{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--lime3);color:var(--lime)}
+.t-ava{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:7px;font-weight:700;margin-left:auto;color:#fff}
+.task-status-row{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}
+.ts-btn{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:all .15s;background:var(--card2);color:var(--ink3)}
+.ts-btn:hover{border-color:var(--lime);color:var(--lime)}
+.ts-btn.ts-active{background:var(--lime3);color:var(--lime);border-color:rgba(79,70,229,.3)}
+
+/* ── MEMBERS ── */
+.member-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r2);background:var(--card);border:1px solid var(--line);margin-bottom:8px;transition:all .18s}
+.member-row:hover{border-color:var(--line2);box-shadow:0 2px 8px rgba(79,70,229,.06)}
+.member-info{flex:1}
+.member-name{font-size:13px;font-weight:600;color:var(--ink)}
+.member-role{font-size:11px;color:var(--ink3);margin-top:2px}
+.role-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.rb-po{background:rgba(139,92,246,.1);color:var(--violet)}
+.rb-sm{background:rgba(79,70,229,.1);color:var(--lime)}
+.rb-dev{background:rgba(59,130,246,.1);color:var(--sky)}
+.rb-qa{background:rgba(245,158,11,.1);color:var(--amber)}
+.rb-ux{background:rgba(239,68,68,.08);color:var(--rose)}
+
+/* ── CHAT ── */
+.chat-wrap{display:grid;grid-template-columns:260px 1fr;gap:0;height:calc(100vh - 58px - 48px);border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+.chat-sidebar{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.chat-rooms{flex:1;overflow-y:auto;padding:8px}
+.room-item{padding:10px 12px;border-radius:var(--r2);cursor:pointer;transition:all .18s;margin-bottom:2px}
+.room-item:hover{background:var(--card2)}
+.room-item.on{background:var(--lime3)}
+.room-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.room-last{font-size:11px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex-shrink:0}
+.chat-main{display:flex;flex-direction:column;background:var(--night)}
+.chat-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--deep)}
+.chat-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;gap:10px;animation:fadeUp .15s ease}
+.msg.mine{flex-direction:row-reverse}
+.msg-ava{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:2px;color:#fff}
+.msg-body{max-width:65%}
+.msg-meta{font-size:10px;color:var(--ink3);margin-bottom:4px}
+.msg.mine .msg-meta{text-align:right}
+.msg-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;color:var(--ink)}
+.msg-bubble.them{background:var(--deep);border:1px solid var(--line);border-radius:12px 12px 12px 2px}
+.msg-bubble.mine{background:var(--lime);border-radius:12px 12px 2px 12px;color:#fff}
+.chat-input-wrap{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:10px;flex-shrink:0;background:var(--deep)}
+.chat-input{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:var(--r2);padding:10px 14px;color:var(--ink);font-family:inherit;font-size:13px;outline:none;transition:border-color .2s;resize:none}
+.chat-input:focus{border-color:var(--lime)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(30,30,60,.3);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.on{display:flex}
+.modal{background:var(--deep);border:1px solid var(--line);border-radius:18px;padding:28px;width:520px;max-height:90vh;overflow-y:auto;animation:fadeUp .22s ease;box-shadow:0 12px 48px rgba(79,70,229,.12)}
+.modal-title{font-family:'Clash Display',sans-serif;font-size:19px;font-weight:700;margin-bottom:22px;color:var(--ink)}
+.form-row{margin-bottom:14px}
+.label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);margin-bottom:6px;display:block}
+.input,.select,.textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:var(--r2);padding:10px 12px;color:var(--ink);font-family:'Cabinet Grotesk',sans-serif;font-size:13px;outline:none;transition:all .2s}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(79,70,229,.08)}
+.select option{background:var(--deep)}
+.textarea{resize:vertical;min-height:80px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--card2);border-radius:var(--r2);padding:4px;border:1px solid var(--line)}
+.tab{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink2);transition:all .18s;border:none;background:transparent;font-family:inherit}
+.tab.on{background:var(--lime);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(79,70,229,.2)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--lime);color:#fff;padding:12px 18px;border-radius:var(--r2);font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 20px rgba(79,70,229,.3)}
+
+/* ── MISC ── */
+.s-sel{background:transparent;border:none;color:var(--lime);font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;outline:none;padding:2px 4px;border-radius:4px}
+.s-sel:hover{background:var(--lime3)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.pd-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:0}
+.pd-tab{padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s;border-top:none;border-left:none;border-right:none;background:transparent;font-family:inherit}
+.pd-tab:hover{color:var(--ink)}
+.pd-tab.on{color:var(--lime);border-bottom-color:var(--lime);font-weight:600}
+.empty{text-align:center;padding:48px 24px;color:var(--ink3)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:14px}
+.notif{width:8px;height:8px;border-radius:50%;background:var(--rose);position:absolute;top:6px;right:6px}
+.prog-full{height:6px;background:var(--line2);border-radius:3px;overflow:hidden;margin:4px 0}
+.prog-full .fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* ── PDF export button ── */
+@media print{.no-print{display:none!important}.print-only{display:block!important}}
+.print-only{display:none}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </div>
+      <span style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700">Colla<span style="color:var(--lime)">bify</span></span>
+    </div>
+    <div class="login-title">Bienvenue 👋</div>
+    <div class="login-sub">Connectez-vous en tant que Scrum Master ou Product Owner</div>
+    <div class="login-roles">
+      <div class="role-card selected" id="rc-sm" onclick="selectRole('sm')">
+        <div class="rc-icon">🧭</div>
+        <div class="rc-name">Scrum Master</div>
+        <div class="rc-user">Mouhamed Zaouga</div>
+      </div>
+      <div class="role-card" id="rc-po" onclick="selectRole('po')">
+        <div class="rc-icon">🎯</div>
+        <div class="rc-name">Product Owner</div>
+        <div class="rc-user">Nour Daasi</div>
+      </div>
+    </div>
+    <div class="login-divider">ou entrez votre email manuellement</div>
+    <div class="form-row">
+      <label class="label">Email</label>
+      <input class="input" id="login-email" placeholder="ex: m.zaouga@univ.tn" autocomplete="email"/>
+    </div>
+    <div class="form-row">
+      <label class="label">Mot de passe</label>
+      <input class="input" type="password" id="login-pass" placeholder="collabify" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-top:4px" onclick="doLogin()">Se connecter →</button>
+    <div style="font-size:11px;color:var(--ink3);text-align:center;margin-top:16px">Mot de passe démo : <strong style="color:var(--ink2)">collabify</strong></div>
+  </div>
+</div>
+
+<div class="shell">
+<!-- RAIL -->
+<div class="rail">
+  <div class="rail-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="#fff"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="#fff"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="#fff"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>
+    </div>
+    <div class="brand-name">Colla<span>bify</span></div>
+  </div>
+  <div class="rail-section">Navigation</div>
+  <div class="rail-item on" id="nav-home" onclick="nav('home',this)"><span class="ri">⊞</span>Accueil</div>
+  <div class="rail-item" id="nav-projects" onclick="nav('projects',this)"><span class="ri">◫</span>Mes Projets <span class="rbadge" id="rail-proj-count">0</span></div>
+  <div class="rail-item" id="nav-tasks" onclick="nav('tasks',this)"><span class="ri">☑</span>Mes Tâches <span class="rbadge" id="rail-task-count">0</span></div>
+  <div class="rail-item" id="nav-messages" onclick="nav('messages',this)" style="position:relative"><span class="ri">◎</span>Messages<span class="rbadge" id="rail-msg-count">0</span></div>
+  <div class="rail-section">Équipe</div>
+  <div class="rail-item" id="nav-members" onclick="nav('members',this)"><span class="ri">◉</span>Membres</div>
+  <div class="rail-foot">
+    <div class="me-card" onclick="nav('profile',null)">
+      <div class="ava" id="rail-ava" style="background:linear-gradient(135deg,#4f46e5,#4f46e588)">MZ</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="rail-name">Mouhamed Z.</div>
+        <div style="font-size:10px;color:var(--ink3)" id="rail-role">Scrum Master</div>
+      </div>
+    </div>
+    <button class="btn" onclick="logout()" style="width:100%;justify-content:center;margin-top:8px;font-size:12px;color:var(--rose);background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);padding:7px">⎋ Déconnexion</button>
+  </div>
+</div>
+
+<!-- STAGE -->
+<div class="stage">
+  <div class="topbar">
+    <div class="tb-title" id="topbar-title">Accueil</div>
+    <div class="tb-search" style="position:relative">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" placeholder="Rechercher projets, tâches, membres…" oninput="doSearch(this.value)" onblur="setTimeout(()=>document.getElementById('search-results').classList.remove('show'),200)"/>
+      <div id="search-results"></div>
+    </div>
+    <button class="btn btn-lime" onclick="showModal('quickCreate')">+ Nouveau</button>
+  </div>
+  <div class="workspace" id="workspace">
+
+<!-- HOME -->
+<div id="v-home" class="view on">
+  <div class="g4" style="margin-bottom:24px" id="home-stats"></div>
+  <div id="home-deadline-warnings" style="margin-bottom:16px"></div>
+  <div class="g2" style="margin-bottom:24px">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600">Projets récents</div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('projects',null)">Voir tout →</button>
+      </div>
+      <div id="home-projects"></div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600">Mes tâches en cours</div>
+        <button class="btn btn-ghost btn-sm" onclick="nav('tasks',null)">Voir tout →</button>
+      </div>
+      <div id="home-tasks"></div>
+    </div>
+  </div>
+  <!-- CHARTS -->
+  <div class="g2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">📊 Répartition des tâches</div></div>
+      <div class="card-body" style="display:flex;align-items:center;justify-content:center;height:200px"><canvas id="chart-tasks-status" width="200" height="200"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📈 Progression des projets</div></div>
+      <div class="card-body" style="height:200px"><canvas id="chart-projects-prog" width="400" height="200"></canvas></div>
+    </div>
+  </div>
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600">Activité récente</div>
+    </div>
+    <div id="home-activity"></div>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<div id="v-projects" class="view">
+  <div class="flex gap12" style="margin-bottom:20px">
+    <div class="tabs" style="margin-bottom:0;flex:none">
+      <button class="tab on" onclick="filterProjects('all',this)">Tous</button>
+      <button class="tab" onclick="filterProjects('active',this)">Actifs</button>
+      <button class="tab" onclick="filterProjects('paused',this)">En pause</button>
+      <button class="tab" onclick="filterProjects('done',this)">Terminés</button>
+    </div>
+    <div class="ml-auto flex gap8">
+      <button class="btn btn-lime" onclick="showModal('newProject')">+ Nouveau projet</button>
+    </div>
+  </div>
+  <div class="proj-grid" id="proj-grid"></div>
+</div>
+
+<!-- PROJECT DETAIL -->
+<div id="v-proj-detail" class="view">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <button class="btn btn-ghost btn-sm" onclick="nav('projects',null)">← Projets</button>
+    <div id="pd-status-pill"></div>
+    <div id="pd-deadline-badge" style="margin-left:4px"></div>
+    <div class="ml-auto flex gap8">
+      <button class="btn btn-ghost btn-sm no-print" onclick="exportPDF()">📄 Export PDF</button>
+      <button class="btn btn-ghost btn-sm no-print" onclick="editCurrentProject()">✏️ Modifier</button>
+      <button class="btn btn-danger btn-sm no-print" onclick="deleteCurrentProject()">🗑️ Supprimer</button>
+    </div>
+  </div>
+  <div id="pd-header" style="margin-bottom:18px"></div>
+  <div class="pd-nav">
+    <button class="pd-tab on" onclick="pdTab('tasks',this)">📋 Tâches</button>
+    <button class="pd-tab" onclick="pdTab('board',this)">⊟ Kanban</button>
+    <button class="pd-tab" onclick="pdTab('members',this)">👥 Membres</button>
+    <button class="pd-tab" onclick="pdTab('chat',this)">💬 Chat</button>
+    <button class="pd-tab" onclick="pdTab('progress',this)">📊 Avancement</button>
+  </div>
+  <div id="pd-content"></div>
+</div>
+
+<!-- MY TASKS -->
+<div id="v-tasks" class="view">
+  <div class="flex gap12" style="margin-bottom:20px">
+    <div class="tabs" style="margin-bottom:0">
+      <button class="tab on" onclick="filterMyTasks('all',this)">Toutes</button>
+      <button class="tab" onclick="filterMyTasks('todo',this)">À faire</button>
+      <button class="tab" onclick="filterMyTasks('doing',this)">En cours</button>
+      <button class="tab" onclick="filterMyTasks('review',this)">En revue</button>
+      <button class="tab" onclick="filterMyTasks('done',this)">Terminées</button>
+    </div>
+    <button class="btn btn-lime ml-auto" onclick="showModal('newTask',null)">+ Nouvelle tâche</button>
+  </div>
+  <div id="my-tasks-list"></div>
+</div>
+
+<!-- MESSAGES -->
+<div id="v-messages" class="view">
+  <div class="chat-wrap" id="chat-wrap"></div>
+</div>
+
+<!-- MEMBERS -->
+<div id="v-members" class="view">
+  <div class="flex gap8" style="margin-bottom:20px">
+    <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;flex:1">Tous les membres</div>
+    <button class="btn btn-lime" onclick="showModal('newMember')">+ Ajouter membre</button>
+  </div>
+  <div id="members-list"></div>
+</div>
+
+<!-- PROFILE -->
+<div id="v-profile" class="view">
+  <div id="profile-content"></div>
+</div>
+
+  </div><!-- /workspace -->
+</div><!-- /stage -->
+</div><!-- /shell -->
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<script>
+// ============================================================
+// AUTH
+// ============================================================
+const API_BASE = "http://127.0.0.1:8000/api";
+
+const DEMO_USERS = {
+  'u0': {id:'u0',name:'Mouhamed Zaouga',initials:'MZ',role:'Scrum Master',  email:'m.zaouga@univ.tn', color:'#4f46e5'},
+  'u1': {id:'u1',name:'Nour Daasi',      initials:'ND',role:'Product Owner', email:'n.daasi@univ.tn',  color:'#8b5cf6'},
+};
+
+let ME = null;
+
+function selectRole(role) {
+  document.getElementById('rc-sm').classList.toggle('selected', role === 'sm');
+  document.getElementById('rc-po').classList.toggle('selected', role === 'po');
+  document.getElementById('login-email').value = role === 'sm' ? 'm.zaouga@univ.tn' : 'n.daasi@univ.tn';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+  if (!email || !password) { errEl.textContent = '⚠️ Veuillez remplir tous les champs.'; errEl.classList.add('show'); return; }
+  try {
+    const res = await fetch(API_BASE + '/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password}) });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    ME = data.member;
+    if (!['Scrum Master','Product Owner'].includes(ME.role)) {
+      errEl.textContent = '🚫 Accès réservé au Scrum Master et au Product Owner.'; errEl.classList.add('show'); return;
+    }
+    localStorage.setItem('collabify_user', JSON.stringify(ME));
+    document.getElementById('login-screen').classList.add('hidden');
+    initData();
+  } catch(e) { errEl.textContent = '❌ Email ou mot de passe incorrect.'; errEl.classList.add('show'); }
+}
+
+function logout() {
+  localStorage.removeItem('collabify_user'); ME = null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-error').classList.remove('show');
+  document.getElementById('login-pass').value = '';
+}
+
+document.getElementById('login-email').value = 'm.zaouga@univ.tn';
+
+(function checkSavedSession() {
+  const saved = localStorage.getItem('collabify_user');
+  if (saved) {
+    try {
+      ME = JSON.parse(saved);
+      if (ME && ['Scrum Master','Product Owner'].includes(ME.role)) {
+        document.getElementById('login-screen').classList.add('hidden');
+        initData();
+      }
+    } catch(e) { localStorage.removeItem('collabify_user'); }
+  }
+})();
+
+// ============================================================
+// DATA
+// ============================================================
+let members = [], projects = [], tasks = [], messages = {}, activity = [];
+const STATUSES = ['todo','doing','review','done'];
+const STATUS_LABELS = {todo:'📌 À faire',doing:'🔄 En cours',review:'👀 En revue',done:'✅ Terminé'};
+const STATUS_COLORS = {todo:'var(--ink3)',doing:'var(--amber)',review:'var(--sky)',done:'var(--lime)'};
+const PRI_LABELS = {high:'Haute',medium:'Moyen',low:'Faible'};
+
+async function initData() {
+  if (!ME) return;
+  // Update sidebar
+  const ra = document.getElementById('rail-ava'), rn = document.getElementById('rail-name'), rr = document.getElementById('rail-role');
+  if (ra) { ra.textContent = ME.initials; ra.style.background = `linear-gradient(135deg,${ME.color},${ME.color}88)`; }
+  if (rn) rn.textContent = ME.name.split(' ').slice(0,2).join(' ');
+  if (rr) rr.textContent = ME.role;
+  try {
+    members  = await fetch(API_BASE+'/members').then(r=>r.json());
+    projects = await fetch(API_BASE+'/projects').then(r=>r.json());
+    tasks    = await fetch(API_BASE+'/tasks').then(r=>r.json());
+    const dash = await fetch(API_BASE+'/projects/dashboard').then(r=>r.json()).catch(()=>({activity:[]}));
+    activity = dash.activity || [];
+    for (let p of projects) messages[p.id] = await fetch(API_BASE+'/messages/'+p.id).then(r=>r.json()).catch(()=>[]);
+    updateRailCounts();
+    if (currentView === 'home')       renderHome();
+    if (currentView === 'projects')   renderProjects();
+    if (currentView === 'tasks')      renderMyTasks();
+    if (currentView === 'members')    renderMembers();
+    if (currentView === 'messages')   renderMessages();
+    if (currentView === 'proj-detail') renderProjDetail();
+    if (currentView === 'profile')    renderProfile();
+  } catch(e) {
+    console.error('initData error:', e);
+    const ws = document.getElementById('workspace');
+    if (ws && currentView === 'home') ws.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text" style="color:var(--rose)">Impossible de contacter le serveur.<br><small style="color:var(--ink3)">Vérifiez que le backend tourne sur http://127.0.0.1:8000</small></div><br><button class="btn btn-lime" onclick="initData()">🔄 Réessayer</button></div>`;
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function mid(uid)        { return members.find(m=>m.id===uid); }
+function proj(id)        { return projects.find(p=>p.id===id); }
+function pid_tasks(pid)  { return tasks.filter(t=>t.pid===pid); }
+function pct(pid)        { const ts=pid_tasks(pid); return ts.length ? Math.round(ts.filter(t=>t.status==='done').length/ts.length*100) : 0; }
+function colorAva(uid)   { const m=mid(uid); return m?m.color:'#8888aa'; }
+function initials(uid)   { const m=mid(uid); return m?m.initials:'?'; }
+function toast(msg)      { const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity='0',2600); }
+function avaHTML(uid,size=24) { const m=mid(uid); const c=m?m.color:'#8888aa'; const i=m?m.initials:'?'; return `<div class="ava" style="width:${size}px;height:${size}px;background:linear-gradient(135deg,${c},${c}88);font-size:${Math.floor(size*.38)}px">${i}</div>`; }
+function roleBadge(role) { const map={'Product Owner':'rb-po','Scrum Master':'rb-sm','Développeur':'rb-dev','QA':'rb-qa','UX Designer':'rb-ux','DevOps':'rb-dev'}; return `<span class="role-badge ${map[role]||'rb-dev'}">${role}</span>`; }
+
+function deadlineBadge(deadline) {
+  if (!deadline) return '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(deadline); d.setHours(0,0,0,0);
+  const diff = Math.round((d-today)/(1000*60*60*24));
+  if (diff < 0)  return `<span class="deadline-due">⚠️ En retard de ${Math.abs(diff)}j</span>`;
+  if (diff === 0) return `<span class="deadline-due">🔥 Deadline aujourd'hui</span>`;
+  if (diff <= 7)  return `<span class="deadline-soon">⏰ Dans ${diff}j</span>`;
+  return `<span class="deadline-ok">📅 ${deadline}</span>`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentView = 'home', currentProject = null, currentPDTab = 'tasks', currentChatRoom = null;
+
+function nav(view, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.rail-item').forEach(r=>r.classList.remove('on'));
+  const titles = {home:'Accueil',projects:'Mes Projets',tasks:'Mes Tâches',messages:'Messages',members:'Membres',profile:'Profil','proj-detail': proj(currentProject)?.name||'Projet'};
+  document.getElementById('topbar-title').textContent = titles[view]||view;
+  document.getElementById('v-'+view)?.classList.add('on');
+  if (el) el.classList.add('on');
+  else { const navEl = document.getElementById('nav-'+view); if(navEl) navEl.classList.add('on'); }
+  currentView = view;
+  const renders = {home:renderHome, projects:renderProjects, tasks:renderMyTasks, messages:renderMessages, members:renderMembers, profile:renderProfile, 'proj-detail':renderProjDetail};
+  renders[view]?.();
+}
+
+// ============================================================
+// HOME
+// ============================================================
+let chartTaskStatus = null, chartProjProg = null;
+
+function renderHome() {
+  updateRailCounts();
+  const myTasks = tasks.filter(t=>t.assignee===ME.id);
+  const doneTasks = myTasks.filter(t=>t.status==='done');
+  const activeProj = projects.filter(p=>p.status==='active');
+
+  // Stats
+  document.getElementById('home-stats').innerHTML = `
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,var(--lime),var(--lime2))"></div><div class="stat-label">Projets actifs</div><div class="stat-val">${activeProj.length}</div><div class="stat-sub">${projects.length} au total</div><div class="stat-ico">◫</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,var(--sky),#60a5fa)"></div><div class="stat-label">Mes tâches</div><div class="stat-val">${myTasks.length}</div><div class="stat-sub">${doneTasks.length} terminées</div><div class="stat-ico">☑</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,var(--violet),#a78bfa)"></div><div class="stat-label">Membres</div><div class="stat-val">${members.length}</div><div class="stat-sub">dans l'équipe</div><div class="stat-ico">◉</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,var(--rose),#f87171)"></div><div class="stat-label">Complétion</div><div class="stat-val">${myTasks.length?Math.round(doneTasks.length/myTasks.length*100):0}%</div><div class="stat-sub">de mes tâches</div><div class="stat-ico">▲</div></div>`;
+
+  // Deadline warnings
+  const overdueProjects = projects.filter(p => {
+    if (!p.deadline || p.status === 'done') return false;
+    const d = new Date(p.deadline); d.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    return (d - today) / (1000*60*60*24) <= 7;
+  });
+  document.getElementById('home-deadline-warnings').innerHTML = overdueProjects.length ? `
+    <div class="deadline-warn" style="margin-bottom:8px">
+      ⚠️ <strong>${overdueProjects.length} projet(s)</strong> avec deadline proche ou dépassée :
+      ${overdueProjects.map(p=>`<span style="margin-left:6px;font-weight:600;cursor:pointer;text-decoration:underline" onclick="openProject('${p.id}')">${p.name}</span>`).join(',')}
+    </div>` : '';
+
+  // Recent projects
+  document.getElementById('home-projects').innerHTML = projects.slice(0,3).map(p=>`
+    <div style="background:var(--card);border:1px solid var(--line);border-left:3px solid ${p.color};border-radius:var(--r2);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .18s" onclick="openProject('${p.id}')" onmouseover="this.style.boxShadow='0 2px 12px rgba(79,70,229,.08)'" onmouseout="this.style.boxShadow=''">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:600;color:var(--ink);flex:1">${p.name}</div>
+        <span class="status-pill ${p.status==='active'?'sp-active':p.status==='done'?'sp-done':'sp-paused'}">${p.status==='active'?'Actif':p.status==='done'?'Terminé':'En pause'}</span>
+      </div>
+      <div class="prog-full"><div class="fill" style="width:${pct(p.id)}%;background:${p.color}"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:10px;color:var(--ink3)">${pid_tasks(p.id).length} tâches</span>
+        <span style="font-size:10px;font-weight:700;color:${p.color}">${pct(p.id)}%</span>
+      </div>
+    </div>`).join('');
+
+  // My tasks in progress
+  const doing = tasks.filter(t=>t.assignee===ME.id&&(t.status==='doing'||t.status==='todo')).slice(0,4);
+  document.getElementById('home-tasks').innerHTML = doing.length ? doing.map(t=>`
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .18s" onclick="openProject('${t.pid}')" onmouseover="this.style.borderColor='var(--line2)'" onmouseout="this.style.borderColor='var(--line)'">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
+        <span style="font-size:10px;color:var(--ink3)">${proj(t.pid)?.name||''}</span>
+      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink)">${t.title}</div>
+    </div>`).join('') : '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Aucune tâche en cours</div></div>';
+
+  // Activity
+  document.getElementById('home-activity').innerHTML = activity.length ? activity.map(a=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--lime3);display:grid;place-items:center;font-size:14px;flex-shrink:0">${a.icon||'📌'}</div>
+      <div style="flex:1;font-size:13px;color:var(--ink2)">${a.text}</div>
+      <div style="font-size:11px;color:var(--ink3);white-space:nowrap">${a.time}</div>
+    </div>`).join('') : '<div style="color:var(--ink3);font-size:13px;text-align:center;padding:20px">Aucune activité récente</div>';
+
+  // Charts
+  renderCharts();
+}
+
+function renderCharts() {
+  // Donut chart — task status distribution
+  const ctx1 = document.getElementById('chart-tasks-status');
+  if (!ctx1) return;
+  if (chartTaskStatus) chartTaskStatus.destroy();
+  const todo  = tasks.filter(t=>t.status==='todo').length;
+  const doing = tasks.filter(t=>t.status==='doing').length;
+  const rev   = tasks.filter(t=>t.status==='review').length;
+  const done  = tasks.filter(t=>t.status==='done').length;
+  chartTaskStatus = new Chart(ctx1, {
+    type:'doughnut',
+    data:{labels:['À faire','En cours','En revue','Terminé'],datasets:[{data:[todo,doing,rev,done],backgroundColor:['#d0d4e4','#f59e0b','#3b82f6','#4f46e5'],borderWidth:0,hoverOffset:4}]},
+    options:{cutout:'68%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}},animation:{animateRotate:true}}
+  });
+
+  // Bar chart — projects progression
+  const ctx2 = document.getElementById('chart-projects-prog');
+  if (!ctx2) return;
+  if (chartProjProg) chartProjProg.destroy();
+  const projNames = projects.slice(0,6).map(p=>p.name.length>14?p.name.substring(0,14)+'…':p.name);
+  const projPcts  = projects.slice(0,6).map(p=>pct(p.id));
+  const projColors = projects.slice(0,6).map(p=>p.color);
+  chartProjProg = new Chart(ctx2, {
+    type:'bar',
+    data:{labels:projNames,datasets:[{data:projPcts,backgroundColor:projColors,borderRadius:6,borderSkipped:false}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{font:{size:10}},grid:{display:false}}},animation:{duration:600}}
+  });
+}
+
+// ============================================================
+// PROJECTS
+// ============================================================
+let projFilter = 'all';
+function filterProjects(f,el) { projFilter=f; document.querySelectorAll('#v-projects .tab').forEach(t=>t.classList.remove('on')); el.classList.add('on'); renderProjects(); }
+
+function renderProjects() {
+  const list = projects.filter(p=>projFilter==='all'||p.status===projFilter);
+  document.getElementById('proj-grid').innerHTML = list.length ? list.map(projCard).join('') : '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">◫</div><div class="empty-text">Aucun projet ici.</div></div>';
+  updateRailCounts();
+}
+
+function projCard(p) {
+  const mems = p.members.slice(0,4);
+  const pc = pct(p.id);
+  const ts = pid_tasks(p.id);
+  const db = deadlineBadge(p.deadline);
+  return `<div class="proj-card" onclick="openProject('${p.id}')" style="border-top:3px solid ${p.color}">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="status-pill ${p.status==='active'?'sp-active':p.status==='done'?'sp-done':'sp-paused'}">${p.status==='active'?'● Actif':p.status==='done'?'● Terminé':'● En pause'}</span>
+      <div style="margin-left:auto">${db}</div>
+    </div>
+    <div class="proj-name">${p.name}</div>
+    <div class="proj-desc">${p.desc}</div>
+    <div class="proj-stats">
+      <div class="proj-stat">📋 ${ts.length} tâches</div>
+      <div class="proj-stat">✅ ${ts.filter(t=>t.status==='done').length} done</div>
+      <div class="proj-stat">👥 ${p.members.length}</div>
+    </div>
+    <div class="proj-members">${mems.map(uid=>`<div class="proj-ava" style="background:linear-gradient(135deg,${colorAva(uid)},${colorAva(uid)}88)">${initials(uid)}</div>`).join('')}${p.members.length>4?`<div class="proj-ava" style="background:var(--line2);color:var(--ink3)">+${p.members.length-4}</div>`:''}</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--ink3)">Progression</span><span style="font-size:11px;font-weight:700;color:${p.color}">${pc}%</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${pc}%;background:${p.color}"></div></div>
+  </div>`;
+}
+
+// ============================================================
+// PROJECT DETAIL
+// ============================================================
+function openProject(pid) {
+  currentProject=pid; currentPDTab='tasks';
+  document.getElementById('topbar-title').textContent = proj(pid)?.name||'Projet';
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.rail-item').forEach(r=>r.classList.remove('on'));
+  document.getElementById('v-proj-detail').classList.add('on');
+  currentView = 'proj-detail';
+  renderProjDetail();
+}
+
+function renderProjDetail() {
+  if (!currentProject) return;
+  const p = proj(currentProject); if (!p) return;
+  const pc = pct(p.id);
+  document.getElementById('pd-status-pill').innerHTML = `<span class="status-pill ${p.status==='active'?'sp-active':p.status==='done'?'sp-done':'sp-paused'}">${p.status==='active'?'● Actif':p.status==='done'?'● Terminé':'● En pause'}</span>`;
+  document.getElementById('pd-deadline-badge').innerHTML = deadlineBadge(p.deadline);
+  document.getElementById('pd-header').innerHTML = `
+    <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px">${p.name}</div>
+    <div style="font-size:13px;color:var(--ink3);margin-bottom:14px">${p.desc}</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="flex:1"><div class="prog-full" style="height:8px"><div class="fill" style="width:${pc}%;background:${p.color};border-radius:4px"></div></div></div>
+      <span style="font-size:14px;font-weight:700;color:${p.color};white-space:nowrap">${pc}% complété</span>
+    </div>`;
+  document.querySelectorAll('.pd-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.pd-tab')[['tasks','board','members','chat','progress'].indexOf(currentPDTab)]?.classList.add('on');
+  renderPDContent();
+}
+
+function pdTab(tab,el) { currentPDTab=tab; document.querySelectorAll('.pd-tab').forEach(t=>t.classList.remove('on')); el.classList.add('on'); renderPDContent(); }
+
+function renderPDContent() {
+  const el = document.getElementById('pd-content'); if (!el) return;
+  const p = proj(currentProject);
+  const ts = pid_tasks(currentProject);
+
+  if (currentPDTab==='tasks') {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:600;flex:1">${ts.length} tâche${ts.length!==1?'s':''}</div>
+        <button class="btn btn-lime btn-sm" onclick="showModal('newTask','${currentProject}')">+ Ajouter tâche</button>
+      </div>
+      ${ts.length ? ts.map(t=>detailTaskRow(t)).join('') : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aucune tâche. Créez-en une !</div></div>'}`;
+
+  } else if (currentPDTab==='board') {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:600">Kanban Board</div>
+        <button class="btn btn-lime btn-sm" onclick="showModal('newTask','${currentProject}')">+ Tâche</button>
+      </div>
+      <div class="kanban-wrap">${STATUSES.map(s=>`
+        <div class="kb-col">
+          <div class="kb-col-head">
+            <div class="kb-col-title">${STATUS_LABELS[s]}</div>
+            <div class="kb-col-cnt">${ts.filter(t=>t.status===s).length}</div>
+          </div>
+          <div class="kb-body">
+            ${ts.filter(t=>t.status===s).map(t=>`
+              <div class="task-card">
+                <div class="task-title">${t.title}</div>
+                <div class="task-meta">
+                  <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
+                  ${t.tags.slice(0,1).map(tg=>`<span class="t-tag">${tg}</span>`).join('')}
+                  <div class="t-ava" style="background:linear-gradient(135deg,${colorAva(t.assignee)},${colorAva(t.assignee)}88)">${initials(t.assignee)}</div>
+                </div>
+                <div class="task-status-row">${STATUSES.map(st=>`<button class="ts-btn${t.status===st?' ts-active':''}" onclick="setTaskStatus('${t.id}','${st}')">${STATUS_LABELS[st]}</button>`).join('')}</div>
+                <div style="display:flex;gap:4px;margin-top:6px">
+                  <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center" onclick="showModal('editTask','${t.id}')">✏️</button>
+                  <button class="btn btn-danger btn-xs" style="flex:1;justify-content:center" onclick="deleteTask('${t.id}')">🗑️</button>
+                </div>
+              </div>`).join('')}
+            ${!ts.filter(t=>t.status===s).length?`<div style="padding:20px;text-align:center;color:var(--ink3);font-size:12px">Vide</div>`:''}
+          </div>
+        </div>`).join('')}</div>`;
+
+  } else if (currentPDTab==='members') {
+    const projMems = p.members.map(uid=>mid(uid)).filter(Boolean);
+    const nonMembers = members.filter(m=>!p.members.includes(m.id));
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:600;flex:1">${projMems.length} membre${projMems.length!==1?'s':''}</div>
+        ${nonMembers.length ? `<button class="btn btn-lime btn-sm" onclick="showModal('addToProject','${currentProject}')">+ Inviter</button>` : ''}
+      </div>
+      ${projMems.map(m=>`
+        <div class="member-row">
+          ${avaHTML(m.id,36)}
+          <div class="member-info">
+            <div class="member-name">${m.name}${m.id===ME.id?' <span style="font-size:10px;color:var(--lime)">(vous)</span>':''}</div>
+            <div class="member-role">${m.email}</div>
+          </div>
+          ${roleBadge(m.role)}
+          <span style="font-size:11px;color:var(--ink3);margin-left:8px">${tasks.filter(t=>t.pid===currentProject&&t.assignee===m.id).length} tâches</span>
+          ${m.id!==ME.id?`<button class="btn btn-danger btn-xs ml-auto" onclick="removeMemberFromProject('${m.id}')">Retirer</button>`:''}
+        </div>`).join('')}`;
+
+  } else if (currentPDTab==='chat') {
+    renderProjectChat(currentProject);
+
+  } else if (currentPDTab==='progress') {
+    const done=ts.filter(t=>t.status==='done').length, doing=ts.filter(t=>t.status==='doing').length, rev=ts.filter(t=>t.status==='review').length, todo2=ts.filter(t=>t.status==='todo').length, pc2=pct(currentProject);
+    el.innerHTML = `
+      <div class="g4" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-accent" style="background:var(--lime)"></div><div class="stat-label">Terminées</div><div class="stat-val" style="color:var(--lime)">${done}</div><div class="stat-ico">✅</div></div>
+        <div class="stat"><div class="stat-accent" style="background:var(--amber)"></div><div class="stat-label">En cours</div><div class="stat-val" style="color:var(--amber)">${doing}</div><div class="stat-ico">🔄</div></div>
+        <div class="stat"><div class="stat-accent" style="background:var(--sky)"></div><div class="stat-label">En revue</div><div class="stat-val" style="color:var(--sky)">${rev}</div><div class="stat-ico">👀</div></div>
+        <div class="stat"><div class="stat-accent" style="background:var(--ink3)"></div><div class="stat-label">À faire</div><div class="stat-val">${todo2}</div><div class="stat-ico">📌</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Progression globale</div></div>
+          <div class="card-body">
+            <div style="font-size:48px;font-weight:700;font-family:'Clash Display',sans-serif;color:${p.color};margin-bottom:8px">${pc2}%</div>
+            <div class="prog-full" style="height:12px;margin-bottom:12px"><div class="fill" style="width:${pc2}%;background:${p.color}"></div></div>
+            <div style="font-size:12px;color:var(--ink3)">${done} tâche${done!==1?'s':''} terminée${done!==1?'s':''} sur ${ts.length}</div>
+            <div style="font-size:12px;color:var(--ink3);margin-top:4px">Deadline : ${p.deadline||'Non définie'}</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Charge par membre</div></div>
+          <div class="card-body">
+            ${p.members.map(uid=>{
+              const m=mid(uid); if(!m)return'';
+              const mt=ts.filter(t=>t.assignee===uid);
+              const md=mt.filter(t=>t.status==='done');
+              const mpct=mt.length?Math.round(md.length/mt.length*100):0;
+              return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                ${avaHTML(uid,28)}
+                <div style="flex:1">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+                    <span style="font-size:12px;font-weight:600">${m.name.split(' ')[0]}</span>
+                    <span style="font-size:11px;color:var(--ink3)">${mt.length} tâches · ${mpct}%</span>
+                  </div>
+                  <div class="prog-full"><div class="fill" style="width:${mpct}%;background:${m.color}"></div></div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+function detailTaskRow(t) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  return `<div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;transition:all .18s" onmouseover="this.style.borderColor='var(--line2)';this.style.boxShadow='0 2px 8px rgba(79,70,229,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.boxShadow=''">
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:5px">${t.title}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
+        ${t.tags.map(tg=>`<span class="t-tag">${tg}</span>`).join('')}
+        ${t.desc?`<span style="font-size:11px;color:var(--ink3)">${t.desc.substring(0,60)}${t.desc.length>60?'…':''}</span>`:''}
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      ${avaHTML(t.assignee,26)}
+      <select class="s-sel" onchange="setTaskStatus('${t.id}',this.value)" style="color:${STATUS_COLORS[t.status]}">
+        ${STATUSES.map(s=>`<option value="${s}"${s===t.status?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
+      </select>
+      <button class="btn btn-ghost btn-xs" onclick="showModal('editTask','${t.id}')">✏️</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button>
+    </div>
+  </div>`;
+}
+
+async function setTaskStatus(tid,status) {
+  await fetch(API_BASE+'/tasks/'+tid+'/status', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status})});
+  await initData();
+}
+
+// ============================================================
+// MY TASKS
+// ============================================================
+let taskFilter = 'all';
+function filterMyTasks(f,el) { taskFilter=f; document.querySelectorAll('#v-tasks .tab').forEach(t=>t.classList.remove('on')); el.classList.add('on'); renderMyTasks(); }
+
+function renderMyTasks() {
+  const mine = tasks.filter(t=>{
+    if (t.assignee!==ME.id) return false;
+    if (taskFilter==='todo')   return t.status==='todo';
+    if (taskFilter==='doing')  return t.status==='doing';
+    if (taskFilter==='review') return t.status==='review';
+    if (taskFilter==='done')   return t.status==='done';
+    return true;
+  });
+  const el = document.getElementById('my-tasks-list'); if (!el) return;
+  if (!mine.length) { el.innerHTML='<div class="empty"><div class="empty-icon">☑</div><div class="empty-text">Aucune tâche ici</div></div>'; return; }
+  el.innerHTML = mine.map(t=>{
+    const p = proj(t.pid);
+    return `<div style="background:var(--card);border:1px solid var(--line);border-left:3px solid ${t.priority==='high'?'var(--rose)':t.priority==='medium'?'var(--amber)':'var(--sky)'};border-radius:var(--r2);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .18s" onmouseover="this.style.boxShadow='0 2px 8px rgba(79,70,229,.08)'" onmouseout="this.style.boxShadow=''">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px">${t.title}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">${t.desc||''}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;background:var(--lime3);color:var(--lime);padding:2px 8px;border-radius:20px;font-weight:600">📁 ${p?.name||'—'}</span>
+          ${t.tags.map(tg=>`<span class="t-tag">${tg}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <select class="s-sel" onchange="setTaskStatus('${t.id}',this.value)" style="color:${STATUS_COLORS[t.status]};font-size:12px;background:var(--card2);border:1px solid var(--line);padding:4px 8px;border-radius:6px">
+          ${STATUSES.map(s=>`<option value="${s}"${s===t.status?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
+        </select>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-xs" onclick="showModal('editTask','${t.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateRailCounts();
+}
+
+// ============================================================
+// MESSAGES
+// ============================================================
+function renderMessages() {
+  const el = document.getElementById('chat-wrap'); if (!el) return;
+  if (!currentChatRoom && projects.length) currentChatRoom = projects[0].id;
+  el.innerHTML = `
+    <div class="chat-sidebar">
+      <div style="padding:14px 12px;border-bottom:1px solid var(--line)">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink3)">Canaux de projet</div>
+      </div>
+      <div class="chat-rooms">
+        ${projects.map(p=>{
+          const msgs = messages[p.id]||[]; const last = msgs[msgs.length-1];
+          return `<div class="room-item${p.id===currentChatRoom?' on':''}" onclick="openChatRoom('${p.id}')">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
+              <div class="room-name">${p.name}</div>
+              ${msgs.length?`<span style="font-size:9px;color:var(--ink3);margin-left:auto">${msgs.length}</span>`:''}
+            </div>
+            <div class="room-last">${last?last.text:'Aucun message'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="chat-main" id="chat-main"></div>`;
+  if (currentChatRoom) renderChatRoom(currentChatRoom);
+}
+
+function openChatRoom(pid) { currentChatRoom=pid; renderMessages(); }
+
+function renderProjectChat(pid) {
+  const el = document.getElementById('pd-content'); if (!el) return;
+  el.innerHTML = `<div style="height:calc(100vh - 300px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);overflow:hidden">
+    <div id="pd-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--night)"></div>
+    <div style="padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:8px;background:var(--deep)">
+      <input id="pd-chat-input" class="input" placeholder="Écrire un message…" style="flex:1" onkeydown="if(event.key==='Enter')sendMsg('${pid}','pd')"/>
+      <button class="btn btn-lime" onclick="sendMsg('${pid}','pd')">↗ Envoyer</button>
+    </div>
+  </div>`;
+  renderChatMsgs(pid,'pd-chat-msgs');
+}
+
+function renderChatRoom(pid) {
+  const el = document.getElementById('chat-main'); if (!el) return;
+  const p = proj(pid);
+  el.innerHTML = `
+    <div class="chat-head">
+      <div style="width:10px;height:10px;border-radius:50%;background:${p?.color||'#ccc'}"></div>
+      <div style="font-size:14px;font-weight:600">${p?.name||'Chat'}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-left:4px">· ${(p?.members||[]).length} membres</div>
+    </div>
+    <div class="chat-messages" id="chat-msgs-${pid}"></div>
+    <div class="chat-input-wrap">
+      <input id="chat-input-${pid}" class="chat-input" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter')sendMsg('${pid}','room')"/>
+      <button class="btn btn-lime" onclick="sendMsg('${pid}','room')">↗</button>
+    </div>`;
+  renderChatMsgs(pid,`chat-msgs-${pid}`);
+}
+
+function renderChatMsgs(pid,containerId) {
+  const el = document.getElementById(containerId); if (!el) return;
+  const msgs = messages[pid]||[];
+  el.innerHTML = msgs.length ? msgs.map(m=>{
+    const isMe = m.uid===ME.id;
+    return `<div class="msg${isMe?' mine':''}">
+      ${!isMe?avaHTML(m.uid,28):''}
+      <div class="msg-body">
+        <div class="msg-meta">${isMe?'Vous':mid(m.uid)?.name||'?'} · ${m.time||''}</div>
+        <div class="msg-bubble${isMe?' mine':' them'}">${m.text}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;color:var(--ink3);font-size:13px;padding:32px">Commencez la conversation !</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendMsg(pid,type) {
+  const inputId = type==='pd'?'pd-chat-input':`chat-input-${pid}`;
+  const input = document.getElementById(inputId);
+  if (!input||!input.value.trim()) return;
+  await fetch(API_BASE+'/messages/'+pid, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({uid:ME.id, text:input.value.trim()})});
+  input.value=''; await initData();
+  if (type==='pd') renderProjectChat(pid); else renderChatRoom(pid);
+}
+
+// ============================================================
+// MEMBERS
+// ============================================================
+function renderMembers() {
+  const el = document.getElementById('members-list'); if (!el) return;
+  el.innerHTML = members.map(m=>`
+    <div class="member-row">
+      ${avaHTML(m.id,42)}
+      <div class="member-info">
+        <div class="member-name">${m.name}${m.id===ME.id?' <span style="font-size:10px;background:var(--lime3);color:var(--lime);padding:1px 6px;border-radius:10px">vous</span>':''}</div>
+        <div class="member-role">${m.email}</div>
+      </div>
+      ${roleBadge(m.role)}
+      <div style="font-size:11px;color:var(--ink3);margin-left:12px">${tasks.filter(t=>t.assignee===m.id).length} tâches</div>
+      <div style="display:flex;gap:6px;margin-left:auto">
+        <button class="btn btn-ghost btn-sm" onclick="showProfile('${m.id}')">👁 Profil</button>
+        ${m.id!==ME.id?`<button class="btn btn-ghost btn-sm" onclick="showModal('editMember','${m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}')">🗑️</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================
+// PROFILE
+// ============================================================
+function renderProfile() { showProfile(ME.id); }
+
+function showProfile(uid) {
+  const m = mid(uid); if (!m) return;
+  const myTasks = tasks.filter(t=>t.assignee===uid);
+  const myProjs = [...new Set(myTasks.map(t=>t.pid))].map(pid=>proj(pid)).filter(Boolean);
+  const donePct = myTasks.length ? Math.round(myTasks.filter(t=>t.status==='done').length/myTasks.length*100) : 0;
+  document.getElementById('profile-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:24px;margin-bottom:24px;padding:28px;background:var(--card);border:1px solid var(--line);border-radius:var(--r)">
+      ${avaHTML(uid,72)}
+      <div style="flex:1">
+        <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px">${m.name}</div>
+        ${roleBadge(m.role)}
+        <div style="font-size:12px;color:var(--ink3);margin-top:8px">✉️ ${m.email}</div>
+      </div>
+      <div style="display:flex;gap:24px;text-align:center">
+        <div><div style="font-size:28px;font-weight:700;color:var(--lime);font-family:'Clash Display',sans-serif">${myTasks.length}</div><div style="font-size:11px;color:var(--ink3)">Tâches</div></div>
+        <div><div style="font-size:28px;font-weight:700;color:var(--sky);font-family:'Clash Display',sans-serif">${myProjs.length}</div><div style="font-size:11px;color:var(--ink3)">Projets</div></div>
+        <div><div style="font-size:28px;font-weight:700;color:var(--violet);font-family:'Clash Display',sans-serif">${donePct}%</div><div style="font-size:11px;color:var(--ink3)">Complétion</div></div>
+      </div>
+      ${m.id===ME.id?`<button class="btn btn-ghost btn-sm" onclick="showModal('editProfile')">✏️ Modifier profil</button>`:''}
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Tâches assignées</div></div>
+        <div class="card-body">${myTasks.length ? myTasks.map(t=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
+            <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
+            <span style="font-size:13px;flex:1;color:var(--ink2)">${t.title}</span>
+            <span style="font-size:11px;font-weight:600;color:${STATUS_COLORS[t.status]}">${STATUS_LABELS[t.status]}</span>
+          </div>`).join('') : '<div style="color:var(--ink3);font-size:13px">Aucune tâche</div>'}</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Projets impliqués</div></div>
+        <div class="card-body">${myProjs.map(p=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="openProject('${p.id}')">
+            <div style="width:8px;height:8px;border-radius:50%;background:${p.color}"></div>
+            <span style="font-size:13px;flex:1;color:var(--ink2)">${p.name}</span>
+            <span style="font-size:11px;font-weight:600;color:${p.color}">${pct(p.id)}%</span>
+          </div>`).join('')}</div>
+      </div>
+    </div>`;
+  nav('profile', null);
+}
+
+// ============================================================
+// SEARCH (fully functional)
+// ============================================================
+function doSearch(q) {
+  const resEl = document.getElementById('search-results');
+  if (!q.trim()) { resEl.classList.remove('show'); return; }
+  const ql = q.toLowerCase();
+  const results = [
+    ...projects.filter(p=>p.name.toLowerCase().includes(ql)||p.desc.toLowerCase().includes(ql)).map(p=>({icon:'◫',label:p.name,sub:`Projet · ${p.status}`,action:()=>openProject(p.id)})),
+    ...tasks.filter(t=>t.title.toLowerCase().includes(ql)||(t.desc||'').toLowerCase().includes(ql)).map(t=>({icon:'📋',label:t.title,sub:`Tâche · ${proj(t.pid)?.name||''}`,action:()=>openProject(t.pid)})),
+    ...members.filter(m=>m.name.toLowerCase().includes(ql)||m.role.toLowerCase().includes(ql)||m.email.toLowerCase().includes(ql)).map(m=>({icon:'👤',label:m.name,sub:m.role,action:()=>showProfile(m.id)})),
+  ].slice(0,8);
+  if (!results.length) { resEl.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--ink3)">Aucun résultat pour "'+q+'"</div>'; resEl.classList.add('show'); return; }
+  resEl.innerHTML = results.map((r,i)=>`
+    <div class="sr-item" onclick="document.getElementById('search-input').value='';document.getElementById('search-results').classList.remove('show');(${r.action.toString()})()">
+      <div class="sr-icon">${r.icon}</div>
+      <div><div class="sr-label">${r.label}</div><div class="sr-sub">${r.sub}</div></div>
+    </div>`).join('');
+  resEl.classList.add('show');
+}
+
+// ============================================================
+// PDF EXPORT
+// ============================================================
+function exportPDF() {
+  const p = proj(currentProject); if (!p) return;
+  const ts2 = pid_tasks(currentProject);
+  const pc2 = pct(currentProject);
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport — ${p.name}</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e;max-width:800px;margin:0 auto}
+    h1{font-size:28px;margin-bottom:4px}h2{font-size:18px;margin:24px 0 10px;border-bottom:2px solid #4f46e5;padding-bottom:6px;color:#4f46e5}
+    .meta{color:#8888aa;font-size:13px;margin-bottom:20px}
+    .stat-row{display:flex;gap:20px;margin-bottom:20px}
+    .stat-box{flex:1;border:1px solid #e4e7f0;border-radius:10px;padding:14px;text-align:center}
+    .stat-box .val{font-size:28px;font-weight:700;color:#4f46e5}.stat-box .lbl{font-size:11px;color:#8888aa;text-transform:uppercase;letter-spacing:1px}
+    .prog-outer{height:12px;background:#e4e7f0;border-radius:6px;overflow:hidden;margin:8px 0}
+    .prog-inner{height:100%;background:${p.color};border-radius:6px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{background:#f7f8fc;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#8888aa;border-bottom:1px solid #e4e7f0}
+    td{padding:10px 12px;border-bottom:1px solid #e4e7f0}
+    .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .done{background:#eeedfd;color:#4f46e5}.todo{background:#fef9ec;color:#f59e0b}.doing{background:#eff6ff;color:#3b82f6}
+    .pri-h{background:#fef2f2;color:#ef4444}.pri-m{background:#fefce8;color:#f59e0b}.pri-l{background:#eff6ff;color:#3b82f6}
+    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e4e7f0;font-size:11px;color:#8888aa;text-align:center}
+  </style></head><body>
+  <h1>${p.name}</h1>
+  <div class="meta">Rapport généré le ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} · ${ME.name} (${ME.role})</div>
+  <div style="margin-bottom:8px;color:#8888aa;font-size:13px">${p.desc}</div>
+  <div class="stat-row">
+    <div class="stat-box"><div class="val">${ts2.length}</div><div class="lbl">Total tâches</div></div>
+    <div class="stat-box"><div class="val" style="color:#4f46e5">${pc2}%</div><div class="lbl">Complétion</div></div>
+    <div class="stat-box"><div class="val" style="color:#ef4444">${ts2.filter(t=>t.status==='todo').length}</div><div class="lbl">À faire</div></div>
+    <div class="stat-box"><div class="val" style="color:#f59e0b">${ts2.filter(t=>t.status==='doing').length}</div><div class="lbl">En cours</div></div>
+    <div class="stat-box"><div class="val" style="color:#3b82f6">${ts2.filter(t=>t.status==='review').length}</div><div class="lbl">En revue</div></div>
+    <div class="stat-box"><div class="val" style="color:#22c55e">${ts2.filter(t=>t.status==='done').length}</div><div class="lbl">Terminées</div></div>
+  </div>
+  <h2>Progression</h2>
+  <div class="prog-outer"><div class="prog-inner" style="width:${pc2}%"></div></div>
+  <p style="font-size:12px;color:#8888aa">Deadline : ${p.deadline||'Non définie'} · Statut : ${p.status}</p>
+  <h2>Liste des tâches</h2>
+  <table>
+    <tr><th>Titre</th><th>Assigné à</th><th>Priorité</th><th>Statut</th><th>Tags</th></tr>
+    ${ts2.map(t=>{
+      const m2=mid(t.assignee);
+      const scls=t.status==='done'?'done':t.status==='todo'?'todo':'doing';
+      const pcls=t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l';
+      return `<tr><td>${t.title}</td><td>${m2?m2.name:'—'}</td><td><span class="badge ${pcls}">${PRI_LABELS[t.priority]}</span></td><td><span class="badge ${scls}">${STATUS_LABELS[t.status]}</span></td><td>${t.tags.join(', ')||'—'}</td></tr>`;
+    }).join('')}
+  </table>
+  <h2>Membres du projet</h2>
+  <table>
+    <tr><th>Nom</th><th>Rôle</th><th>Email</th><th>Tâches</th></tr>
+    ${p.members.map(uid=>{const m2=mid(uid);if(!m2)return'';return `<tr><td>${m2.name}</td><td>${m2.role}</td><td>${m2.email}</td><td>${ts2.filter(t=>t.assignee===uid).length}</td></tr>`;}).join('')}
+  </table>
+  <div class="footer">Collabify — Rapport généré automatiquement · ${new Date().toLocaleString('fr-FR')}</div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),500);
+  toast('📄 Rapport PDF ouvert !');
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function showModal(type, payload) {
+  const modal = document.getElementById('modal-body');
+  let html = '';
+  if (type==='newProject') {
+    html = `<div class="modal-title">🚀 Nouveau projet</div>
+    <div class="form-row"><label class="label">Nom du projet *</label><input class="input" id="f-name" placeholder="ex: Plateforme E-Learning"/></div>
+    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc" placeholder="Décrivez le projet…"></textarea></div>
+    <div class="g2">
+      <div class="form-row"><label class="label">Couleur</label><input class="input" id="f-color" type="color" value="#4f46e5" style="height:42px;cursor:pointer"/></div>
+      <div class="form-row"><label class="label">Deadline</label><input class="input" id="f-deadline" type="date"/></div>
+    </div>
+    <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status"><option value="active">Actif</option><option value="paused">En pause</option></select></div>
+    <div class="form-row"><label class="label">Membres</label><div id="f-members-check" style="display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto">${members.filter(m=>m.id!==ME.id).map(m=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink2);padding:4px 0"><input type="checkbox" value="${m.id}" style="accent-color:var(--lime)"/>${avaHTML(m.id,22)} ${m.name} — ${m.role}</label>`).join('')}</div></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveProject()">Créer le projet</button></div>`;
+  } else if (type==='editProject') {
+    const p = proj(payload); if (!p) return;
+    html = `<div class="modal-title">✏️ Modifier le projet</div>
+    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${p.name}"/></div>
+    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc">${p.desc}</textarea></div>
+    <div class="g2">
+      <div class="form-row"><label class="label">Couleur</label><input class="input" id="f-color" type="color" value="${p.color}" style="height:42px;cursor:pointer"/></div>
+      <div class="form-row"><label class="label">Deadline</label><input class="input" id="f-deadline" type="date" value="${p.deadline}"/></div>
+    </div>
+    <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status"><option value="active"${p.status==='active'?' selected':''}>Actif</option><option value="done"${p.status==='done'?' selected':''}>Terminé</option><option value="paused"${p.status==='paused'?' selected':''}>En pause</option></select></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="updateProject('${payload}')">Enregistrer</button></div>`;
+  } else if (type==='newTask') {
+    const pid = payload;
+    html = `<div class="modal-title">📋 Nouvelle tâche</div>
+    <div class="form-row"><label class="label">Titre *</label><input class="input" id="f-title" placeholder="ex: Concevoir les maquettes"/></div>
+    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc" placeholder="Détails de la tâche…" style="min-height:60px"></textarea></div>
+    <div class="g2">
+      <div class="form-row"><label class="label">Priorité</label><select class="select" id="f-priority"><option value="high">🔴 Haute</option><option value="medium" selected>🟡 Moyenne</option><option value="low">🔵 Faible</option></select></div>
+      <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status"><option value="todo">📌 À faire</option><option value="doing">🔄 En cours</option><option value="review">👀 En revue</option><option value="done">✅ Terminé</option></select></div>
+    </div>
+    <div class="g2">
+      <div class="form-row"><label class="label">Projet</label><select class="select" id="f-pid">${projects.map(p=>`<option value="${p.id}"${pid&&p.id===pid?' selected':''}>${p.name}</option>`).join('')}</select></div>
+      <div class="form-row"><label class="label">Assigné à</label><select class="select" id="f-assignee">${members.map(m=>`<option value="${m.id}"${m.id===ME.id?' selected':''}>${m.name}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row"><label class="label">Tags (séparés par virgule)</label><input class="input" id="f-tags" placeholder="ex: Frontend, React"/></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveTask()">Créer la tâche</button></div>`;
+  } else if (type==='editTask') {
+    const t = tasks.find(x=>x.id===payload); if (!t) return;
+    html = `<div class="modal-title">✏️ Modifier la tâche</div>
+    <div class="form-row"><label class="label">Titre</label><input class="input" id="f-title" value="${t.title}"/></div>
+    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc">${t.desc||''}</textarea></div>
+    <div class="g2">
+      <div class="form-row"><label class="label">Priorité</label><select class="select" id="f-priority"><option value="high"${t.priority==='high'?' selected':''}>🔴 Haute</option><option value="medium"${t.priority==='medium'?' selected':''}>🟡 Moyenne</option><option value="low"${t.priority==='low'?' selected':''}>🔵 Faible</option></select></div>
+      <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status">${STATUSES.map(s=>`<option value="${s}"${s===t.status?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row"><label class="label">Assigné à</label><select class="select" id="f-assignee">${members.map(m=>`<option value="${m.id}"${m.id===t.assignee?' selected':''}>${m.name}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="label">Tags</label><input class="input" id="f-tags" value="${t.tags.join(', ')}"/></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="updateTask('${payload}')">Enregistrer</button></div>`;
+  } else if (type==='newMember') {
+    html = `<div class="modal-title">👤 Ajouter un membre</div>
+    <div class="form-row"><label class="label">Prénom & Nom *</label><input class="input" id="f-name" placeholder="ex: Amira Karray"/></div>
+    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" type="email" placeholder="a.karray@univ.tn"/></div>
+    <div class="form-row"><label class="label">Mot de passe</label><input class="input" id="f-pass" type="password" value="collabify" placeholder="Mot de passe"/></div>
+    <div class="form-row"><label class="label">Rôle</label><select class="select" id="f-role"><option>Développeur</option><option>UX Designer</option><option>QA</option><option>DevOps</option><option>Product Owner</option><option>Scrum Master</option></select></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveMember()">Ajouter</button></div>`;
+  } else if (type==='editMember') {
+    const m = mid(payload); if (!m) return;
+    html = `<div class="modal-title">✏️ Modifier membre</div>
+    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${m.name}"/></div>
+    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" value="${m.email}"/></div>
+    <div class="form-row"><label class="label">Rôle</label><select class="select" id="f-role"><option${m.role==='Développeur'?' selected':''}>Développeur</option><option${m.role==='UX Designer'?' selected':''}>UX Designer</option><option${m.role==='QA'?' selected':''}>QA</option><option${m.role==='DevOps'?' selected':''}>DevOps</option><option${m.role==='Product Owner'?' selected':''}>Product Owner</option><option${m.role==='Scrum Master'?' selected':''}>Scrum Master</option></select></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="updateMember('${payload}')">Enregistrer</button></div>`;
+  } else if (type==='editProfile') {
+    html = `<div class="modal-title">✏️ Modifier mon profil</div>
+    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${ME.name}"/></div>
+    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" value="${ME.email}"/></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveProfileEdit()">Enregistrer</button></div>`;
+  } else if (type==='addToProject') {
+    const p = proj(payload);
+    const nonMems = members.filter(m=>!p.members.includes(m.id));
+    html = `<div class="modal-title">👥 Inviter dans ${p.name}</div>
+    <div class="form-row"><label class="label">Sélectionner des membres</label><div style="display:flex;flex-direction:column;gap:8px">${nonMems.map(m=>`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:var(--r2);background:var(--card2);border:1px solid var(--line)">${avaHTML(m.id,28)}<span style="font-size:13px;flex:1">${m.name} — ${m.role}</span><input type="checkbox" value="${m.id}" style="accent-color:var(--lime)"/></label>`).join('')}</div></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="addMembersToProject('${payload}')">Inviter</button></div>`;
+  } else if (type==='quickCreate') {
+    html = `<div class="modal-title">⚡ Créer rapidement</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newProject')"><span style="font-size:28px">◫</span>Nouveau projet</button>
+      <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newTask',null)"><span style="font-size:28px">📋</span>Nouvelle tâche</button>
+      <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newMember')"><span style="font-size:28px">👤</span>Nouveau membre</button>
+      <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();nav('messages',null)"><span style="font-size:28px">💬</span>Messages</button>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>`;
+  }
+  modal.innerHTML = html;
+  document.getElementById('overlay').classList.add('on');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('on'); }
+
+// ============================================================
+// CRUD
+// ============================================================
+async function saveProject() {
+  const name = document.getElementById('f-name')?.value.trim(); if (!name) { toast('⚠️ Nom requis'); return; }
+  const mems = Array.from(document.querySelectorAll('#f-members-check input:checked')).map(i=>i.value);
+  await fetch(API_BASE+'/projects/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, desc:document.getElementById('f-desc')?.value||'', color:document.getElementById('f-color')?.value||'#4f46e5', deadline:document.getElementById('f-deadline')?.value||'', status:document.getElementById('f-status')?.value||'active', members:[ME.id,...mems]})});
+  closeModal(); await initData(); nav('projects',null); toast('✅ Projet créé !');
+}
+
+async function updateProject(pid) {
+  await fetch(API_BASE+'/projects/'+pid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:document.getElementById('f-name')?.value, desc:document.getElementById('f-desc')?.value, color:document.getElementById('f-color')?.value, deadline:document.getElementById('f-deadline')?.value, status:document.getElementById('f-status')?.value})});
+  closeModal(); await initData(); renderProjDetail(); toast('✅ Projet mis à jour !');
+}
+
+function editCurrentProject() { if (currentProject) showModal('editProject',currentProject); }
+
+async function deleteCurrentProject() {
+  if (!currentProject||!confirm('Supprimer ce projet et toutes ses tâches ?')) return;
+  await fetch(API_BASE+'/projects/'+currentProject, {method:'DELETE'});
+  const pid = currentProject; currentProject = null;
+  await initData(); nav('projects',null); toast('🗑️ Projet supprimé');
+}
+
+async function saveTask() {
+  const title = document.getElementById('f-title')?.value.trim(); if (!title) { toast('⚠️ Titre requis'); return; }
+  await fetch(API_BASE+'/tasks/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pid:document.getElementById('f-pid')?.value||projects[0]?.id, title, desc:document.getElementById('f-desc')?.value||'', priority:document.getElementById('f-priority')?.value||'medium', status:document.getElementById('f-status')?.value||'todo', assignee:document.getElementById('f-assignee')?.value||ME.id, tags:document.getElementById('f-tags')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[]})});
+  closeModal(); await initData(); toast('✅ Tâche créée !');
+}
+
+async function updateTask(tid) {
+  await fetch(API_BASE+'/tasks/'+tid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:document.getElementById('f-title')?.value, desc:document.getElementById('f-desc')?.value, priority:document.getElementById('f-priority')?.value, status:document.getElementById('f-status')?.value, assignee:document.getElementById('f-assignee')?.value, tags:document.getElementById('f-tags')?.value.split(',').map(s=>s.trim()).filter(Boolean)})});
+  closeModal(); await initData(); toast('✅ Tâche mise à jour !');
+}
+
+async function deleteTask(tid) {
+  const t = tasks.find(x=>x.id===tid); if (!t||!confirm(`Supprimer "${t.title}" ?`)) return;
+  await fetch(API_BASE+'/tasks/'+tid, {method:'DELETE'}); await initData(); toast('🗑️ Tâche supprimée');
+}
+
+async function saveMember() {
+  const name = document.getElementById('f-name')?.value.trim(); if (!name) { toast('⚠️ Nom requis'); return; }
+  const role = document.getElementById('f-role')?.value||'Développeur';
+  const colors = {'Développeur':'#3b82f6','UX Designer':'#ec4899','QA':'#f59e0b','DevOps':'#8b5cf6','Product Owner':'#8b5cf6','Scrum Master':'#4f46e5'};
+  await fetch(API_BASE+'/members/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, role, email:document.getElementById('f-email')?.value||'', password:document.getElementById('f-pass')?.value||'collabify', color:colors[role]||'#8888aa'})});
+  closeModal(); await initData(); nav('members',null); toast(`✅ ${name} ajouté(e) !`);
+}
+
+async function updateMember(uid) {
+  await fetch(API_BASE+'/members/'+uid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:document.getElementById('f-name')?.value, email:document.getElementById('f-email')?.value, role:document.getElementById('f-role')?.value})});
+  closeModal(); await initData(); nav('members',null); toast('✅ Membre mis à jour !');
+}
+
+async function deleteMember(uid) {
+  if (!confirm('Supprimer ce membre ?')) return;
+  await fetch(API_BASE+'/members/'+uid, {method:'DELETE'}); await initData(); nav('members',null); toast('🗑️ Membre supprimé');
+}
+
+async function saveProfileEdit() {
+  const name = document.getElementById('f-name')?.value.trim();
+  const email = document.getElementById('f-email')?.value.trim();
+  await fetch(API_BASE+'/members/'+ME.id, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, email, role:ME.role})});
+  ME.name = name; ME.email = email;
+  ME.initials = name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+  localStorage.setItem('collabify_user', JSON.stringify(ME));
+  closeModal(); await initData(); showProfile(ME.id); toast('✅ Profil mis à jour !');
+}
+
+async function addMembersToProject(pid) {
+  const checked = Array.from(document.querySelectorAll('#modal-body input[type=checkbox]:checked')).map(i=>i.value);
+  await fetch(API_BASE+'/projects/'+pid+'/members', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({member_ids:checked})});
+  closeModal(); await initData(); toast(`✅ ${checked.length} membre(s) invité(s) !`);
+}
+
+async function removeMemberFromProject(uid) {
+  await fetch(API_BASE+'/projects/'+currentProject+'/members/'+uid, {method:'DELETE'});
+  await initData(); toast('✅ Membre retiré du projet');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function updateRailCounts() {
+  if (!ME) return;
+  const rpc = document.getElementById('rail-proj-count'); if (rpc) rpc.textContent = projects.length;
+  const rtc = document.getElementById('rail-task-count'); if (rtc) rtc.textContent = tasks.filter(t=>t.assignee===ME.id&&t.status!=='done').length;
+  const rmc = document.getElementById('rail-msg-count'); if (rmc) rmc.textContent = Object.values(messages).reduce((a,msgs)=>a+msgs.length,0);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+initData();
+</script>
+</body>
+</html>
