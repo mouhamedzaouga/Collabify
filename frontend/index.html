@@ -26,7 +26,7 @@ body{font-family:'Cabinet Grotesk',sans-serif;background:var(--night);color:var(
 .login-logo .logo-mark{width:42px;height:42px;background:var(--lime);border-radius:12px;display:grid;place-items:center}
 .login-title{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--ink);text-align:center;margin-bottom:6px}
 .login-sub{font-size:13px;color:var(--ink3);text-align:center;margin-bottom:28px}
-.login-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.login-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
 .role-card{background:var(--card2);border:2px solid var(--line);border-radius:12px;padding:16px 12px;cursor:pointer;text-align:center;transition:all .2s}
 .role-card:hover{border-color:var(--line2);background:#f0eeff}
 .role-card.selected{border-color:var(--lime);background:#eeedfd}
@@ -38,6 +38,12 @@ body{font-family:'Cabinet Grotesk',sans-serif;background:var(--night);color:var(
 .login-divider::before{left:0}.login-divider::after{right:0}
 .login-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--rose);font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:16px;display:none}
 .login-error.show{display:block}
+.login-box{max-height:calc(100vh - 32px);overflow-y:auto}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:22px}
+.auth-tabs button{border:0;background:transparent;padding:9px;border-radius:7px;font:inherit;font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer}
+.auth-tabs button.on{background:var(--deep);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.login-ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:#059669;font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:12px;display:none}
 
 /* ── LAYOUT ── */
 h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
@@ -266,31 +272,58 @@ h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
       <span style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700">Colla<span style="color:var(--lime)">bify</span></span>
     </div>
     <div class="login-title">Bienvenue 👋</div>
-    <div class="login-sub">Connectez-vous en tant que Scrum Master ou Product Owner</div>
-    <div class="login-roles">
-      <div class="role-card selected" id="rc-sm" onclick="selectRole('sm')">
-        <div class="rc-icon">🧭</div>
-        <div class="rc-name">Scrum Master</div>
-        <div class="rc-user">Mouhamed Zaouga</div>
+    <div class="login-sub" id="auth-sub">Connectez-vous à votre compte</div>
+    <div class="auth-tabs">
+      <button id="tab-login" class="on" onclick="showAuthTab('login')">Connexion</button>
+      <button id="tab-register" onclick="showAuthTab('register')">Créer un compte</button>
+    </div>
+
+    <!-- CONNEXION -->
+    <div id="auth-login">
+      <div class="form-row">
+        <label class="label">Email</label>
+        <input class="input" id="login-email" placeholder="votre.email@univ.tn" autocomplete="email"/>
       </div>
-      <div class="role-card" id="rc-po" onclick="selectRole('po')">
-        <div class="rc-icon">🎯</div>
-        <div class="rc-name">Product Owner</div>
-        <div class="rc-user">Nour Daasi</div>
+      <div class="form-row">
+        <label class="label">Mot de passe</label>
+        <input class="input" type="password" id="login-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
       </div>
+      <div class="login-error" id="login-error"></div>
+      <button class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-top:4px" onclick="doLogin()">Se connecter →</button>
     </div>
-    <div class="login-divider">ou entrez votre email manuellement</div>
-    <div class="form-row">
-      <label class="label">Email</label>
-      <input class="input" id="login-email" placeholder="ex: m.zaouga@univ.tn" autocomplete="email"/>
+
+    <!-- INSCRIPTION -->
+    <div id="auth-register" style="display:none">
+      <div class="login-roles">
+        <div class="role-card" id="rr-student" onclick="selectRegRole('Étudiant')">
+          <div class="rc-icon">🎒</div>
+          <div class="rc-name">Étudiant</div>
+          <div class="rc-user">Réalise les tâches des projets</div>
+        </div>
+        <div class="role-card" id="rr-teacher" onclick="selectRegRole('Enseignant')">
+          <div class="rc-icon">🎓</div>
+          <div class="rc-name">Enseignant</div>
+          <div class="rc-user">Crée et suit les projets</div>
+        </div>
+      </div>
+      <div id="reg-fields" style="display:none">
+        <div class="form-2col">
+          <div class="form-row"><label class="label">Prénom</label><input class="input" id="reg-first" autocomplete="given-name"/></div>
+          <div class="form-row"><label class="label">Nom</label><input class="input" id="reg-last" autocomplete="family-name"/></div>
+        </div>
+        <div class="form-row"><label class="label">Email</label><input class="input" id="reg-email" type="email" placeholder="votre.email@univ.tn" autocomplete="email"/></div>
+        <div class="form-row" id="reg-row-ident"><label class="label">Identifiant étudiant</label><input class="input" id="reg-ident" placeholder="ex: ETU-2026-014" autocomplete="off"/></div>
+        <div class="form-row" id="reg-row-matricule"><label class="label">Matricule enseignant</label><input class="input" id="reg-matricule" placeholder="ex: ENS-0123" autocomplete="off"/></div>
+        <div class="form-row" id="reg-row-code"><label class="label">Code d'invitation enseignant</label><input class="input" id="reg-code" type="password" autocomplete="off"/></div>
+        <div class="form-2col">
+          <div class="form-row"><label class="label">Mot de passe</label><input class="input" type="password" id="reg-pass" placeholder="8 caractères min." autocomplete="new-password"/></div>
+          <div class="form-row"><label class="label">Confirmation</label><input class="input" type="password" id="reg-pass2" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        </div>
+        <div class="login-error" id="reg-error"></div>
+        <button class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-top:4px" onclick="doRegister()">Créer mon compte →</button>
+      </div>
+      <div id="reg-hint" style="font-size:12px;color:var(--ink3);text-align:center">Choisissez votre profil pour continuer.</div>
     </div>
-    <div class="form-row">
-      <label class="label">Mot de passe</label>
-      <input class="input" type="password" id="login-pass" placeholder="collabify" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
-    <div class="login-error" id="login-error"></div>
-    <button class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;font-size:14px;margin-top:4px" onclick="doLogin()">Se connecter →</button>
-    <div style="font-size:11px;color:var(--ink3);text-align:center;margin-top:16px">Mot de passe démo : <strong style="color:var(--ink2)">collabify</strong></div>
   </div>
 </div>
 
@@ -308,14 +341,15 @@ h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
   <div class="rail-item" id="nav-projects" onclick="nav('projects',this)"><span class="ri">◫</span>Mes Projets <span class="rbadge" id="rail-proj-count">0</span></div>
   <div class="rail-item" id="nav-tasks" onclick="nav('tasks',this)"><span class="ri">☑</span>Mes Tâches <span class="rbadge" id="rail-task-count">0</span></div>
   <div class="rail-item" id="nav-messages" onclick="nav('messages',this)" style="position:relative"><span class="ri">◎</span>Messages<span class="rbadge" id="rail-msg-count">0</span></div>
+  <div class="rail-item" id="nav-authorizations" onclick="nav('authorizations',this)" style="position:relative"><span class="ri">🔐</span>Autorisations<span class="rbadge" id="rail-auth-count">0</span></div>
   <div class="rail-section">Équipe</div>
   <div class="rail-item" id="nav-members" onclick="nav('members',this)"><span class="ri">◉</span>Membres</div>
   <div class="rail-foot">
     <div class="me-card" onclick="nav('profile',null)">
-      <div class="ava" id="rail-ava" style="background:linear-gradient(135deg,#4f46e5,#4f46e588)">MZ</div>
+      <div class="ava" id="rail-ava" style="background:linear-gradient(135deg,#4f46e5,#4f46e588)">?</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="rail-name">Mouhamed Z.</div>
-        <div style="font-size:10px;color:var(--ink3)" id="rail-role">Scrum Master</div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="rail-name">—</div>
+        <div style="font-size:10px;color:var(--ink3)" id="rail-role"></div>
       </div>
     </div>
     <button class="btn" onclick="logout()" style="width:100%;justify-content:center;margin-top:8px;font-size:12px;color:var(--rose);background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);padding:7px">⎋ Déconnexion</button>
@@ -384,7 +418,7 @@ h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
       <button class="tab" onclick="filterProjects('done',this)">Terminés</button>
     </div>
     <div class="ml-auto flex gap8">
-      <button class="btn btn-lime" onclick="showModal('newProject')">+ Nouveau projet</button>
+      <button class="btn btn-lime" id="btn-new-project" onclick="showModal('newProject')">+ Nouveau projet</button>
     </div>
   </div>
   <div class="proj-grid" id="proj-grid"></div>
@@ -398,8 +432,8 @@ h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
     <div id="pd-deadline-badge" style="margin-left:4px"></div>
     <div class="ml-auto flex gap8">
       <button class="btn btn-ghost btn-sm no-print" onclick="exportPDF()">📄 Export PDF</button>
-      <button class="btn btn-ghost btn-sm no-print" onclick="editCurrentProject()">✏️ Modifier</button>
-      <button class="btn btn-danger btn-sm no-print" onclick="deleteCurrentProject()">🗑️ Supprimer</button>
+      <button class="btn btn-ghost btn-sm no-print" id="btn-edit-project" onclick="editCurrentProject()">✏️ Modifier</button>
+      <button class="btn btn-danger btn-sm no-print" id="btn-delete-project" onclick="deleteCurrentProject()">🗑️ Supprimer</button>
     </div>
   </div>
   <div id="pd-header" style="margin-bottom:18px"></div>
@@ -433,11 +467,16 @@ h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
   <div class="chat-wrap" id="chat-wrap"></div>
 </div>
 
+<!-- AUTHORIZATIONS -->
+<div id="v-authorizations" class="view">
+  <div id="auth-content"></div>
+</div>
+
 <!-- MEMBERS -->
 <div id="v-members" class="view">
   <div class="flex gap8" style="margin-bottom:20px">
     <div style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;flex:1">Tous les membres</div>
-    <button class="btn btn-lime" onclick="showModal('newMember')">+ Ajouter membre</button>
+    <button class="btn btn-lime" id="btn-add-member" onclick="showModal('newMember')">+ Ajouter membre</button>
   </div>
   <div id="members-list"></div>
 </div>
@@ -460,19 +499,54 @@ h1,h2,h3,h4,.brand{font-family:'Clash Display',sans-serif}
 // ============================================================
 // AUTH
 // ============================================================
-const API_BASE = "http://127.0.0.1:8000/api";
+// Servi par FastAPI (http://localhost:8000) → même origine ; ouvert via file:// → backend local par défaut.
+const API_BASE = location.protocol.startsWith('http') ? location.origin + '/api' : 'http://127.0.0.1:8000/api';
+const TOKEN_KEY = 'collabify_token';
+let lastErrAt = 0;
+function jsonOrThrow(r) { if (!r.ok) throw new Error('HTTP ' + r.status + ' sur ' + r.url.replace(location.origin, '')); return r.json(); }
 
-const DEMO_USERS = {
-  'u0': {id:'u0',name:'Mouhamed Zaouga',initials:'MZ',role:'Scrum Master',  email:'m.zaouga@univ.tn', color:'#4f46e5'},
-  'u1': {id:'u1',name:'Nour Daasi',      initials:'ND',role:'Product Owner', email:'n.daasi@univ.tn',  color:'#8b5cf6'},
+// Échappe les données utilisateur avant insertion dans du HTML (protection XSS).
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Ajoute automatiquement le JWT aux appels vers l'API ; une 401 (session expirée) déconnecte l'utilisateur.
+const _fetch = window.fetch.bind(window);
+window.fetch = async (url, opts = {}) => {
+  if (typeof url === 'string' && url.startsWith(API_BASE) && !url.startsWith(API_BASE + '/auth/login')) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) opts = { ...opts, headers: { ...(opts.headers || {}), Authorization: 'Bearer ' + token } };
+  }
+  let res;
+  try { res = await _fetch(url, opts); }
+  catch (e) { if (ME) { lastErrAt = Date.now(); toast('⚠️ Serveur injoignable — le backend est-il lancé ?'); } throw e; }
+  // Les écritures refusées par le serveur (403, 409, 422…) affichent la raison au lieu d'un faux « succès ».
+  if (!res.ok && res.status !== 401 && ME && (opts.method || 'GET') !== 'GET') {
+    const d = await res.clone().json().catch(() => ({}));
+    const msg = typeof d.detail === 'string' ? d.detail : 'Requête refusée par le serveur';
+    lastErrAt = Date.now(); toast('⚠️ ' + msg);
+  }
+  if (res.status === 401 && typeof url === 'string' && !url.includes('/auth/login') && ME) { logout(); toast('⏱️ Session expirée, reconnectez-vous'); }
+  return res;
 };
 
 let ME = null;
 
-function selectRole(role) {
-  document.getElementById('rc-sm').classList.toggle('selected', role === 'sm');
-  document.getElementById('rc-po').classList.toggle('selected', role === 'po');
-  document.getElementById('login-email').value = role === 'sm' ? 'm.zaouga@univ.tn' : 'n.daasi@univ.tn';
+// Un Enseignant a tous les droits. Un Étudiant est limité (voir isTeacher() plus bas).
+function isTeacher() { return !!ME && ME.role === 'Enseignant'; }
+
+
+// Finalise une connexion (login ou inscription) : session + chargement des données.
+function completeLogin(data, errEl) {
+  ME = data.member;
+  if (!['Enseignant','Étudiant'].includes(ME.role)) {
+    ME = null; errEl.textContent = '🚫 Accès réservé aux Enseignants et aux Étudiants.'; errEl.classList.add('show'); return false;
+  }
+  localStorage.setItem('collabify_user', JSON.stringify(ME));
+  localStorage.setItem(TOKEN_KEY, data.access_token);
+  document.getElementById('login-screen').classList.add('hidden');
+  initData();
+  return true;
 }
 
 async function doLogin() {
@@ -483,33 +557,88 @@ async function doLogin() {
   if (!email || !password) { errEl.textContent = '⚠️ Veuillez remplir tous les champs.'; errEl.classList.add('show'); return; }
   try {
     const res = await fetch(API_BASE + '/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password}) });
+    if (res.status === 429) { errEl.textContent = '⏳ Trop de tentatives, réessayez dans quelques minutes.'; errEl.classList.add('show'); return; }
     if (!res.ok) throw new Error();
-    const data = await res.json();
-    ME = data.member;
-    if (!['Scrum Master','Product Owner'].includes(ME.role)) {
-      errEl.textContent = '🚫 Accès réservé au Scrum Master et au Product Owner.'; errEl.classList.add('show'); return;
+    completeLogin(await res.json(), errEl);
+  } catch(e) { errEl.textContent = e instanceof TypeError ? '🔌 Serveur injoignable — lancez le backend.' : '❌ Email ou mot de passe incorrect.'; errEl.classList.add('show'); }
+}
+
+// ── Inscription ──────────────────────────────────────────────────────────────
+let regRole = null, teacherCodeRequired = false;
+
+function showAuthTab(tab) {
+  const reg = tab === 'register';
+  document.getElementById('auth-login').style.display = reg ? 'none' : '';
+  document.getElementById('auth-register').style.display = reg ? '' : 'none';
+  document.getElementById('tab-login').classList.toggle('on', !reg);
+  document.getElementById('tab-register').classList.toggle('on', reg);
+  document.getElementById('auth-sub').textContent = reg ? 'Créez votre compte Collabify' : 'Connectez-vous à votre compte';
+  if (reg) loadRegisterOptions();
+}
+
+async function loadRegisterOptions() {
+  try {
+    const d = await fetch(API_BASE + '/auth/register-options').then(r => r.json());
+    teacherCodeRequired = !!d.teacher_code_required;
+  } catch (e) { /* le serveur répondra à l'envoi */ }
+  selectRegRole(regRole);
+}
+
+function selectRegRole(role) {
+  regRole = role;
+  document.getElementById('rr-student').classList.toggle('selected', role === 'Étudiant');
+  document.getElementById('rr-teacher').classList.toggle('selected', role === 'Enseignant');
+  document.getElementById('reg-fields').style.display = role ? '' : 'none';
+  document.getElementById('reg-hint').style.display = role ? 'none' : '';
+  document.getElementById('reg-row-ident').style.display = role === 'Étudiant' ? '' : 'none';
+  document.getElementById('reg-row-matricule').style.display = role === 'Enseignant' ? '' : 'none';
+  document.getElementById('reg-row-code').style.display = role === 'Enseignant' && teacherCodeRequired ? '' : 'none';
+}
+
+const FIELD_LABELS = { first_name:'prénom', last_name:'nom', email:'email', password:'mot de passe', identifier:'identifiant', matricule:'matricule', role:'profil' };
+
+async function doRegister() {
+  const errEl = document.getElementById('reg-error');
+  const v = id => document.getElementById(id).value.trim();
+  const fail = msg => { errEl.textContent = msg; errEl.classList.add('show'); };
+  errEl.classList.remove('show');
+  if (!regRole) return fail('⚠️ Choisissez Étudiant ou Enseignant.');
+  const body = { role: regRole, first_name: v('reg-first'), last_name: v('reg-last'), email: v('reg-email'), password: document.getElementById('reg-pass').value };
+  if (regRole === 'Étudiant') body.identifier = v('reg-ident'); else body.matricule = v('reg-matricule');
+  if (regRole === 'Enseignant' && teacherCodeRequired) body.teacher_code = document.getElementById('reg-code').value;
+  if (!body.first_name || !body.last_name || !body.email || !(regRole === 'Étudiant' ? body.identifier : body.matricule))
+    return fail('⚠️ Veuillez remplir tous les champs.');
+  if (body.password.length < 8) return fail('⚠️ Le mot de passe doit contenir au moins 8 caractères.');
+  if (body.password !== document.getElementById('reg-pass2').value) return fail('⚠️ Les deux mots de passe ne correspondent pas.');
+  try {
+    const res = await fetch(API_BASE + '/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (Array.isArray(data.detail)) {   // erreurs de validation (422)
+        const fields = [...new Set(data.detail.map(d => FIELD_LABELS[d.loc?.[d.loc.length - 1]]).filter(Boolean))];
+        return fail('⚠️ Champ invalide' + (fields.length ? ' : ' + fields.join(', ') : '') + '. Identifiant/matricule : 3 à 30 caractères (lettres, chiffres, . _ -).');
+      }
+      return fail('❌ ' + (data.detail || 'Création du compte impossible.'));
     }
-    localStorage.setItem('collabify_user', JSON.stringify(ME));
-    document.getElementById('login-screen').classList.add('hidden');
-    initData();
-  } catch(e) { errEl.textContent = '❌ Email ou mot de passe incorrect.'; errEl.classList.add('show'); }
+    ['reg-first','reg-last','reg-email','reg-ident','reg-matricule','reg-code','reg-pass','reg-pass2'].forEach(id => document.getElementById(id).value = '');
+    completeLogin(data, errEl);
+  } catch (e) { fail(e instanceof TypeError ? '🔌 Serveur injoignable — lancez le backend.' : '❌ Création du compte impossible.'); }
 }
 
 function logout() {
-  localStorage.removeItem('collabify_user'); ME = null;
+  localStorage.removeItem('collabify_user'); localStorage.removeItem(TOKEN_KEY); ME = null;
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('login-error').classList.remove('show');
   document.getElementById('login-pass').value = '';
+  showAuthTab('login');
 }
-
-document.getElementById('login-email').value = 'm.zaouga@univ.tn';
 
 (function checkSavedSession() {
   const saved = localStorage.getItem('collabify_user');
-  if (saved) {
+  if (saved && localStorage.getItem(TOKEN_KEY)) {
     try {
       ME = JSON.parse(saved);
-      if (ME && ['Scrum Master','Product Owner'].includes(ME.role)) {
+      if (ME && ['Enseignant','Étudiant'].includes(ME.role)) {
         document.getElementById('login-screen').classList.add('hidden');
         initData();
       }
@@ -520,7 +649,7 @@ document.getElementById('login-email').value = 'm.zaouga@univ.tn';
 // ============================================================
 // DATA
 // ============================================================
-let members = [], projects = [], tasks = [], messages = {}, activity = [];
+let members = [], projects = [], tasks = [], messages = {}, activity = [], authRequests = [];
 const STATUSES = ['todo','doing','review','done'];
 const STATUS_LABELS = {todo:'📌 À faire',doing:'🔄 En cours',review:'👀 En revue',done:'✅ Terminé'};
 const STATUS_COLORS = {todo:'var(--ink3)',doing:'var(--amber)',review:'var(--sky)',done:'var(--lime)'};
@@ -533,26 +662,52 @@ async function initData() {
   if (ra) { ra.textContent = ME.initials; ra.style.background = `linear-gradient(135deg,${ME.color},${ME.color}88)`; }
   if (rn) rn.textContent = ME.name.split(' ').slice(0,2).join(' ');
   if (rr) rr.textContent = ME.role;
+  applyPermissions();
   try {
-    members  = await fetch(API_BASE+'/members').then(r=>r.json());
-    projects = await fetch(API_BASE+'/projects').then(r=>r.json());
-    tasks    = await fetch(API_BASE+'/tasks').then(r=>r.json());
+    members  = await fetch(API_BASE+'/members').then(jsonOrThrow);
+    projects = await fetch(API_BASE+'/projects').then(jsonOrThrow);
+    tasks    = await fetch(API_BASE+'/tasks').then(jsonOrThrow);
+    const authQS = isTeacher() ? '' : ('?student_id='+encodeURIComponent(ME.id));
+    authRequests = await fetch(API_BASE+'/authorizations'+authQS).then(r=>r.json()).catch(()=>[]);
     const dash = await fetch(API_BASE+'/projects/dashboard').then(r=>r.json()).catch(()=>({activity:[]}));
     activity = dash.activity || [];
     for (let p of projects) messages[p.id] = await fetch(API_BASE+'/messages/'+p.id).then(r=>r.json()).catch(()=>[]);
+    document.getElementById('api-banner')?.remove();
     updateRailCounts();
     if (currentView === 'home')       renderHome();
     if (currentView === 'projects')   renderProjects();
     if (currentView === 'tasks')      renderMyTasks();
     if (currentView === 'members')    renderMembers();
     if (currentView === 'messages')   renderMessages();
+    if (currentView === 'authorizations') renderAuthorizations();
     if (currentView === 'proj-detail') renderProjDetail();
     if (currentView === 'profile')    renderProfile();
   } catch(e) {
     console.error('initData error:', e);
-    const ws = document.getElementById('workspace');
-    if (ws && currentView === 'home') ws.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text" style="color:var(--rose)">Impossible de contacter le serveur.<br><small style="color:var(--ink3)">Vérifiez que le backend tourne sur http://127.0.0.1:8000</small></div><br><button class="btn btn-lime" onclick="initData()">🔄 Réessayer</button></div>`;
+    if (!ME) return;  // déconnecté entre-temps (session expirée) : l'écran de connexion est déjà affiché
+    showApiBanner(e);
   }
+}
+
+// Bandeau d'erreur non destructif : n'efface jamais le contenu des vues.
+function showApiBanner(e) {
+  document.getElementById('api-banner')?.remove();
+  const ws = document.getElementById('workspace'); if (!ws) return;
+  const b = document.createElement('div');
+  b.id = 'api-banner';
+  b.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px 16px;border:1px solid var(--rose);border-radius:var(--r);background:var(--card);color:var(--rose);font-size:13px';
+  b.innerHTML = `<span>⚠️ Impossible de charger les données — ${esc(e && e.message || 'erreur inconnue')}</span><button class="btn btn-lime btn-sm" style="margin-left:auto" onclick="initData()">🔄 Réessayer</button>`;
+  ws.prepend(b);
+}
+
+// Applique les restrictions d'interface : l'Enseignant a tous les droits,
+// l'Étudiant est limité (pas de gestion projets/membres, tâches complexes soumises à autorisation).
+function applyPermissions() {
+  const teacher = isTeacher();
+  ['btn-new-project','btn-edit-project','btn-delete-project','btn-add-member'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.style.display = teacher ? '' : 'none';
+  });
 }
 
 // ============================================================
@@ -564,9 +719,9 @@ function pid_tasks(pid)  { return tasks.filter(t=>t.pid===pid); }
 function pct(pid)        { const ts=pid_tasks(pid); return ts.length ? Math.round(ts.filter(t=>t.status==='done').length/ts.length*100) : 0; }
 function colorAva(uid)   { const m=mid(uid); return m?m.color:'#8888aa'; }
 function initials(uid)   { const m=mid(uid); return m?m.initials:'?'; }
-function toast(msg)      { const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity='0',2600); }
+function toast(msg)      { if (Date.now()-lastErrAt<1500 && !msg.startsWith('⚠️')) return; const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity='0',2600); }
 function avaHTML(uid,size=24) { const m=mid(uid); const c=m?m.color:'#8888aa'; const i=m?m.initials:'?'; return `<div class="ava" style="width:${size}px;height:${size}px;background:linear-gradient(135deg,${c},${c}88);font-size:${Math.floor(size*.38)}px">${i}</div>`; }
-function roleBadge(role) { const map={'Product Owner':'rb-po','Scrum Master':'rb-sm','Développeur':'rb-dev','QA':'rb-qa','UX Designer':'rb-ux','DevOps':'rb-dev'}; return `<span class="role-badge ${map[role]||'rb-dev'}">${role}</span>`; }
+function roleBadge(role) { const map={'Étudiant':'rb-po','Enseignant':'rb-sm','Développeur':'rb-dev','QA':'rb-qa','UX Designer':'rb-ux','DevOps':'rb-dev'}; return `<span class="role-badge ${map[role]||'rb-dev'}">${role}</span>`; }
 
 function deadlineBadge(deadline) {
   if (!deadline) return '';
@@ -587,13 +742,13 @@ let currentView = 'home', currentProject = null, currentPDTab = 'tasks', current
 function nav(view, el) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.querySelectorAll('.rail-item').forEach(r=>r.classList.remove('on'));
-  const titles = {home:'Accueil',projects:'Mes Projets',tasks:'Mes Tâches',messages:'Messages',members:'Membres',profile:'Profil','proj-detail': proj(currentProject)?.name||'Projet'};
+  const titles = {home:'Accueil',projects:'Mes Projets',tasks:'Mes Tâches',messages:'Messages',authorizations:'Autorisations',members:'Membres',profile:'Profil','proj-detail': proj(currentProject)?.name||'Projet'};
   document.getElementById('topbar-title').textContent = titles[view]||view;
   document.getElementById('v-'+view)?.classList.add('on');
   if (el) el.classList.add('on');
   else { const navEl = document.getElementById('nav-'+view); if(navEl) navEl.classList.add('on'); }
   currentView = view;
-  const renders = {home:renderHome, projects:renderProjects, tasks:renderMyTasks, messages:renderMessages, members:renderMembers, profile:renderProfile, 'proj-detail':renderProjDetail};
+  const renders = {home:renderHome, projects:renderProjects, tasks:renderMyTasks, messages:renderMessages, authorizations:renderAuthorizations, members:renderMembers, profile:renderProfile, 'proj-detail':renderProjDetail};
   renders[view]?.();
 }
 
@@ -625,14 +780,14 @@ function renderHome() {
   document.getElementById('home-deadline-warnings').innerHTML = overdueProjects.length ? `
     <div class="deadline-warn" style="margin-bottom:8px">
       ⚠️ <strong>${overdueProjects.length} projet(s)</strong> avec deadline proche ou dépassée :
-      ${overdueProjects.map(p=>`<span style="margin-left:6px;font-weight:600;cursor:pointer;text-decoration:underline" onclick="openProject('${p.id}')">${p.name}</span>`).join(',')}
+      ${overdueProjects.map(p=>`<span style="margin-left:6px;font-weight:600;cursor:pointer;text-decoration:underline" onclick="openProject('${p.id}')">${esc(p.name)}</span>`).join(',')}
     </div>` : '';
 
   // Recent projects
   document.getElementById('home-projects').innerHTML = projects.slice(0,3).map(p=>`
     <div style="background:var(--card);border:1px solid var(--line);border-left:3px solid ${p.color};border-radius:var(--r2);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .18s" onclick="openProject('${p.id}')" onmouseover="this.style.boxShadow='0 2px 12px rgba(79,70,229,.08)'" onmouseout="this.style.boxShadow=''">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="font-size:13px;font-weight:600;color:var(--ink);flex:1">${p.name}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink);flex:1">${esc(p.name)}</div>
         <span class="status-pill ${p.status==='active'?'sp-active':p.status==='done'?'sp-done':'sp-paused'}">${p.status==='active'?'Actif':p.status==='done'?'Terminé':'En pause'}</span>
       </div>
       <div class="prog-full"><div class="fill" style="width:${pct(p.id)}%;background:${p.color}"></div></div>
@@ -648,9 +803,9 @@ function renderHome() {
     <div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .18s" onclick="openProject('${t.pid}')" onmouseover="this.style.borderColor='var(--line2)'" onmouseout="this.style.borderColor='var(--line)'">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
-        <span style="font-size:10px;color:var(--ink3)">${proj(t.pid)?.name||''}</span>
+        <span style="font-size:10px;color:var(--ink3)">${esc(proj(t.pid)?.name||'')}</span>
       </div>
-      <div style="font-size:13px;font-weight:500;color:var(--ink)">${t.title}</div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink)">${esc(t.title)}</div>
     </div>`).join('') : '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Aucune tâche en cours</div></div>';
 
   // Activity
@@ -716,8 +871,8 @@ function projCard(p) {
       <span class="status-pill ${p.status==='active'?'sp-active':p.status==='done'?'sp-done':'sp-paused'}">${p.status==='active'?'● Actif':p.status==='done'?'● Terminé':'● En pause'}</span>
       <div style="margin-left:auto">${db}</div>
     </div>
-    <div class="proj-name">${p.name}</div>
-    <div class="proj-desc">${p.desc}</div>
+    <div class="proj-name">${esc(p.name)}</div>
+    <div class="proj-desc">${esc(p.desc)}</div>
     <div class="proj-stats">
       <div class="proj-stat">📋 ${ts.length} tâches</div>
       <div class="proj-stat">✅ ${ts.filter(t=>t.status==='done').length} done</div>
@@ -749,8 +904,8 @@ function renderProjDetail() {
   document.getElementById('pd-status-pill').innerHTML = `<span class="status-pill ${p.status==='active'?'sp-active':p.status==='done'?'sp-done':'sp-paused'}">${p.status==='active'?'● Actif':p.status==='done'?'● Terminé':'● En pause'}</span>`;
   document.getElementById('pd-deadline-badge').innerHTML = deadlineBadge(p.deadline);
   document.getElementById('pd-header').innerHTML = `
-    <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px">${p.name}</div>
-    <div style="font-size:13px;color:var(--ink3);margin-bottom:14px">${p.desc}</div>
+    <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px">${esc(p.name)}</div>
+    <div style="font-size:13px;color:var(--ink3);margin-bottom:14px">${esc(p.desc)}</div>
     <div style="display:flex;align-items:center;gap:16px">
       <div style="flex:1"><div class="prog-full" style="height:8px"><div class="fill" style="width:${pc}%;background:${p.color};border-radius:4px"></div></div></div>
       <span style="font-size:14px;font-weight:700;color:${p.color};white-space:nowrap">${pc}% complété</span>
@@ -790,16 +945,16 @@ function renderPDContent() {
           <div class="kb-body">
             ${ts.filter(t=>t.status===s).map(t=>`
               <div class="task-card">
-                <div class="task-title">${t.title}</div>
+                <div class="task-title">${esc(t.title)}</div>
                 <div class="task-meta">
                   <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
-                  ${t.tags.slice(0,1).map(tg=>`<span class="t-tag">${tg}</span>`).join('')}
+                  ${t.tags.slice(0,1).map(tg=>`<span class="t-tag">${esc(tg)}</span>`).join('')}
                   <div class="t-ava" style="background:linear-gradient(135deg,${colorAva(t.assignee)},${colorAva(t.assignee)}88)">${initials(t.assignee)}</div>
                 </div>
                 <div class="task-status-row">${STATUSES.map(st=>`<button class="ts-btn${t.status===st?' ts-active':''}" onclick="setTaskStatus('${t.id}','${st}')">${STATUS_LABELS[st]}</button>`).join('')}</div>
                 <div style="display:flex;gap:4px;margin-top:6px">
                   <button class="btn btn-ghost btn-xs" style="flex:1;justify-content:center" onclick="showModal('editTask','${t.id}')">✏️</button>
-                  <button class="btn btn-danger btn-xs" style="flex:1;justify-content:center" onclick="deleteTask('${t.id}')">🗑️</button>
+                  ${isTeacher()?`<button class="btn btn-danger btn-xs" style="flex:1;justify-content:center" onclick="deleteTask('${t.id}')">🗑️</button>`:''}
                 </div>
               </div>`).join('')}
             ${!ts.filter(t=>t.status===s).length?`<div style="padding:20px;text-align:center;color:var(--ink3);font-size:12px">Vide</div>`:''}
@@ -812,18 +967,18 @@ function renderPDContent() {
     el.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <div style="font-size:14px;font-weight:600;flex:1">${projMems.length} membre${projMems.length!==1?'s':''}</div>
-        ${nonMembers.length ? `<button class="btn btn-lime btn-sm" onclick="showModal('addToProject','${currentProject}')">+ Inviter</button>` : ''}
+        ${(nonMembers.length && isTeacher()) ? `<button class="btn btn-lime btn-sm" onclick="showModal('addToProject','${currentProject}')">+ Inviter</button>` : ''}
       </div>
       ${projMems.map(m=>`
         <div class="member-row">
           ${avaHTML(m.id,36)}
           <div class="member-info">
-            <div class="member-name">${m.name}${m.id===ME.id?' <span style="font-size:10px;color:var(--lime)">(vous)</span>':''}</div>
-            <div class="member-role">${m.email}</div>
+            <div class="member-name">${esc(m.name)}${m.id===ME.id?' <span style="font-size:10px;color:var(--lime)">(vous)</span>':''}</div>
+            <div class="member-role">${esc(m.email)}</div>
           </div>
           ${roleBadge(m.role)}
           <span style="font-size:11px;color:var(--ink3);margin-left:8px">${tasks.filter(t=>t.pid===currentProject&&t.assignee===m.id).length} tâches</span>
-          ${m.id!==ME.id?`<button class="btn btn-danger btn-xs ml-auto" onclick="removeMemberFromProject('${m.id}')">Retirer</button>`:''}
+          ${(m.id!==ME.id && isTeacher())?`<button class="btn btn-danger btn-xs ml-auto" onclick="removeMemberFromProject('${m.id}')">Retirer</button>`:''}
         </div>`).join('')}`;
 
   } else if (currentPDTab==='chat') {
@@ -860,7 +1015,7 @@ function renderPDContent() {
                 ${avaHTML(uid,28)}
                 <div style="flex:1">
                   <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-                    <span style="font-size:12px;font-weight:600">${m.name.split(' ')[0]}</span>
+                    <span style="font-size:12px;font-weight:600">${esc(m.name.split(' ')[0])}</span>
                     <span style="font-size:11px;color:var(--ink3)">${mt.length} tâches · ${mpct}%</span>
                   </div>
                   <div class="prog-full"><div class="fill" style="width:${mpct}%;background:${m.color}"></div></div>
@@ -877,11 +1032,11 @@ function detailTaskRow(t) {
   const today = new Date(); today.setHours(0,0,0,0);
   return `<div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;transition:all .18s" onmouseover="this.style.borderColor='var(--line2)';this.style.boxShadow='0 2px 8px rgba(79,70,229,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.boxShadow=''">
     <div style="flex:1">
-      <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:5px">${t.title}</div>
+      <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:5px">${esc(t.title)}</div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
-        ${t.tags.map(tg=>`<span class="t-tag">${tg}</span>`).join('')}
-        ${t.desc?`<span style="font-size:11px;color:var(--ink3)">${t.desc.substring(0,60)}${t.desc.length>60?'…':''}</span>`:''}
+        ${t.tags.map(tg=>`<span class="t-tag">${esc(tg)}</span>`).join('')}
+        ${t.desc?`<span style="font-size:11px;color:var(--ink3)">${esc(t.desc.substring(0,60))}${t.desc.length>60?'…':''}</span>`:''}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -890,7 +1045,7 @@ function detailTaskRow(t) {
         ${STATUSES.map(s=>`<option value="${s}"${s===t.status?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
       </select>
       <button class="btn btn-ghost btn-xs" onclick="showModal('editTask','${t.id}')">✏️</button>
-      <button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button>
+      ${isTeacher()?`<button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button>`:''}
     </div>
   </div>`;
 }
@@ -921,11 +1076,11 @@ function renderMyTasks() {
     const p = proj(t.pid);
     return `<div style="background:var(--card);border:1px solid var(--line);border-left:3px solid ${t.priority==='high'?'var(--rose)':t.priority==='medium'?'var(--amber)':'var(--sky)'};border-radius:var(--r2);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:all .18s" onmouseover="this.style.boxShadow='0 2px 8px rgba(79,70,229,.08)'" onmouseout="this.style.boxShadow=''">
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px">${t.title}</div>
-        <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">${t.desc||''}</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px">${esc(t.title)}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">${esc(t.desc||'')}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:11px;background:var(--lime3);color:var(--lime);padding:2px 8px;border-radius:20px;font-weight:600">📁 ${p?.name||'—'}</span>
-          ${t.tags.map(tg=>`<span class="t-tag">${tg}</span>`).join('')}
+          <span style="font-size:11px;background:var(--lime3);color:var(--lime);padding:2px 8px;border-radius:20px;font-weight:600">📁 ${esc(p?.name||'—')}</span>
+          ${t.tags.map(tg=>`<span class="t-tag">${esc(tg)}</span>`).join('')}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
@@ -934,7 +1089,7 @@ function renderMyTasks() {
         </select>
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-xs" onclick="showModal('editTask','${t.id}')">✏️</button>
-          <button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button>
+          ${isTeacher()?`<button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button>`:''}
         </div>
       </div>
     </div>`;
@@ -959,10 +1114,10 @@ function renderMessages() {
           return `<div class="room-item${p.id===currentChatRoom?' on':''}" onclick="openChatRoom('${p.id}')">
             <div style="display:flex;align-items:center;gap:6px">
               <div style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
-              <div class="room-name">${p.name}</div>
+              <div class="room-name">${esc(p.name)}</div>
               ${msgs.length?`<span style="font-size:9px;color:var(--ink3);margin-left:auto">${msgs.length}</span>`:''}
             </div>
-            <div class="room-last">${last?last.text:'Aucun message'}</div>
+            <div class="room-last">${last?esc(last.text):'Aucun message'}</div>
           </div>`;
         }).join('')}
       </div>
@@ -991,7 +1146,7 @@ function renderChatRoom(pid) {
   el.innerHTML = `
     <div class="chat-head">
       <div style="width:10px;height:10px;border-radius:50%;background:${p?.color||'#ccc'}"></div>
-      <div style="font-size:14px;font-weight:600">${p?.name||'Chat'}</div>
+      <div style="font-size:14px;font-weight:600">${esc(p?.name||'Chat')}</div>
       <div style="font-size:11px;color:var(--ink3);margin-left:4px">· ${(p?.members||[]).length} membres</div>
     </div>
     <div class="chat-messages" id="chat-msgs-${pid}"></div>
@@ -1010,8 +1165,8 @@ function renderChatMsgs(pid,containerId) {
     return `<div class="msg${isMe?' mine':''}">
       ${!isMe?avaHTML(m.uid,28):''}
       <div class="msg-body">
-        <div class="msg-meta">${isMe?'Vous':mid(m.uid)?.name||'?'} · ${m.time||''}</div>
-        <div class="msg-bubble${isMe?' mine':' them'}">${m.text}</div>
+        <div class="msg-meta">${isMe?'Vous':esc(mid(m.uid)?.name||'?')} · ${m.time||''}</div>
+        <div class="msg-bubble${isMe?' mine':' them'}">${esc(m.text)}</div>
       </div>
     </div>`;
   }).join('') : '<div style="text-align:center;color:var(--ink3);font-size:13px;padding:32px">Commencez la conversation !</div>';
@@ -1028,6 +1183,64 @@ async function sendMsg(pid,type) {
 }
 
 // ============================================================
+// AUTORISATIONS (tâches complexes — Étudiant → Enseignant)
+// ============================================================
+const AUTH_STATUS_LABELS = {pending:'⏳ En attente', approved:'✅ Approuvée', rejected:'❌ Refusée'};
+
+function renderAuthorizations() {
+  const el = document.getElementById('auth-content'); if (!el) return;
+
+  if (isTeacher()) {
+    const pending = authRequests.filter(r=>r.status==='pending');
+    const done = authRequests.filter(r=>r.status!=='pending');
+    el.innerHTML = `
+      <div style="font-size:14px;font-weight:600;margin-bottom:14px">${pending.length} demande${pending.length!==1?'s':''} en attente</div>
+      ${pending.length ? pending.map(r=>authRequestCard(r,true)).join('') : '<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Aucune demande en attente.</div></div>'}
+      ${done.length ? `<div style="font-size:13px;font-weight:600;margin:22px 0 12px;color:var(--ink3)">Historique</div>${done.map(r=>authRequestCard(r,false)).join('')}` : ''}`;
+  } else {
+    el.innerHTML = `
+      <div style="font-size:14px;font-weight:600;margin-bottom:14px">Mes demandes d'autorisation</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:16px">Une tâche complexe doit être validée par l'enseignant avant d'être créée. Coche « 🟣 Complexe » en créant une tâche pour envoyer une demande.</div>
+      ${authRequests.length ? authRequests.map(r=>authRequestCard(r,false)).join('') : '<div class="empty"><div class="empty-icon">🔐</div><div class="empty-text">Aucune demande envoyée pour le moment.</div></div>'}`;
+  }
+}
+
+function authRequestCard(r, showActions) {
+  const student = mid(r.student_id);
+  const p = proj(r.pid);
+  const statusColor = r.status==='pending' ? 'var(--amber)' : r.status==='approved' ? 'var(--lime)' : 'var(--rose)';
+  return `<div style="background:var(--card);border:1px solid var(--line);border-left:3px solid ${statusColor};border-radius:var(--r2);padding:14px 16px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="font-size:13px;font-weight:600;flex:1">${esc(r.title)}</div>
+      <span style="font-size:11px;font-weight:600;color:${statusColor}">${AUTH_STATUS_LABELS[r.status]}</span>
+    </div>
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">${esc(r.desc||'Aucune description')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--ink3);margin-bottom:${showActions?'10px':'0'}">
+      ${student?`<span>👤 ${esc(student.name)}</span>`:''}
+      ${p?`<span>◫ ${esc(p.name)}</span>`:''}
+      <span>${PRI_LABELS[r.priority]||r.priority}</span>
+      <span>${r.created}</span>
+    </div>
+    ${r.status!=='pending' && r.review_comment ? `<div style="font-size:11px;color:var(--ink3);font-style:italic;margin-bottom:8px">💬 ${esc(r.review_comment)}</div>` : ''}
+    ${showActions ? `<div style="display:flex;gap:8px">
+      <button class="btn btn-lime btn-sm" onclick="approveAuthRequest('${r.id}')">✅ Approuver</button>
+      <button class="btn btn-danger btn-sm" onclick="rejectAuthRequest('${r.id}')">❌ Refuser</button>
+    </div>` : ''}
+  </div>`;
+}
+
+async function approveAuthRequest(rid) {
+  await fetch(API_BASE+'/authorizations/'+rid+'/approve', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({reviewer_id:ME.id})});
+  await initData(); renderAuthorizations(); toast('✅ Demande approuvée, tâche créée !');
+}
+
+async function rejectAuthRequest(rid) {
+  const comment = prompt('Raison du refus (optionnel) :') || '';
+  await fetch(API_BASE+'/authorizations/'+rid+'/reject', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({reviewer_id:ME.id, comment})});
+  await initData(); renderAuthorizations(); toast('❌ Demande refusée');
+}
+
+// ============================================================
 // MEMBERS
 // ============================================================
 function renderMembers() {
@@ -1036,14 +1249,14 @@ function renderMembers() {
     <div class="member-row">
       ${avaHTML(m.id,42)}
       <div class="member-info">
-        <div class="member-name">${m.name}${m.id===ME.id?' <span style="font-size:10px;background:var(--lime3);color:var(--lime);padding:1px 6px;border-radius:10px">vous</span>':''}</div>
-        <div class="member-role">${m.email}</div>
+        <div class="member-name">${esc(m.name)}${m.id===ME.id?' <span style="font-size:10px;background:var(--lime3);color:var(--lime);padding:1px 6px;border-radius:10px">vous</span>':''}</div>
+        <div class="member-role">${esc(m.email)}</div>
       </div>
       ${roleBadge(m.role)}
       <div style="font-size:11px;color:var(--ink3);margin-left:12px">${tasks.filter(t=>t.assignee===m.id).length} tâches</div>
       <div style="display:flex;gap:6px;margin-left:auto">
         <button class="btn btn-ghost btn-sm" onclick="showProfile('${m.id}')">👁 Profil</button>
-        ${m.id!==ME.id?`<button class="btn btn-ghost btn-sm" onclick="showModal('editMember','${m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}')">🗑️</button>`:''}
+        ${(m.id!==ME.id && isTeacher())?`<button class="btn btn-ghost btn-sm" onclick="showModal('editMember','${m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}')">🗑️</button>`:''}
       </div>
     </div>`).join('');
 }
@@ -1062,9 +1275,10 @@ function showProfile(uid) {
     <div style="display:flex;align-items:center;gap:24px;margin-bottom:24px;padding:28px;background:var(--card);border:1px solid var(--line);border-radius:var(--r)">
       ${avaHTML(uid,72)}
       <div style="flex:1">
-        <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px">${m.name}</div>
+        <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:6px">${esc(m.name)}</div>
         ${roleBadge(m.role)}
-        <div style="font-size:12px;color:var(--ink3);margin-top:8px">✉️ ${m.email}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:8px">✉️ ${esc(m.email)}</div>
+        ${uid===ME.id && (ME.identifier||ME.matricule) ? `<div style="font-size:12px;color:var(--ink3);margin-top:4px">🪪 ${ME.matricule?'Matricule':'Identifiant'} : ${esc(ME.matricule||ME.identifier)}</div>` : ''}
       </div>
       <div style="display:flex;gap:24px;text-align:center">
         <div><div style="font-size:28px;font-weight:700;color:var(--lime);font-family:'Clash Display',sans-serif">${myTasks.length}</div><div style="font-size:11px;color:var(--ink3)">Tâches</div></div>
@@ -1079,7 +1293,7 @@ function showProfile(uid) {
         <div class="card-body">${myTasks.length ? myTasks.map(t=>`
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
             <span class="pri ${t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l'}">${PRI_LABELS[t.priority]}</span>
-            <span style="font-size:13px;flex:1;color:var(--ink2)">${t.title}</span>
+            <span style="font-size:13px;flex:1;color:var(--ink2)">${esc(t.title)}</span>
             <span style="font-size:11px;font-weight:600;color:${STATUS_COLORS[t.status]}">${STATUS_LABELS[t.status]}</span>
           </div>`).join('') : '<div style="color:var(--ink3);font-size:13px">Aucune tâche</div>'}</div>
       </div>
@@ -1088,12 +1302,17 @@ function showProfile(uid) {
         <div class="card-body">${myProjs.map(p=>`
           <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="openProject('${p.id}')">
             <div style="width:8px;height:8px;border-radius:50%;background:${p.color}"></div>
-            <span style="font-size:13px;flex:1;color:var(--ink2)">${p.name}</span>
+            <span style="font-size:13px;flex:1;color:var(--ink2)">${esc(p.name)}</span>
             <span style="font-size:11px;font-weight:600;color:${p.color}">${pct(p.id)}%</span>
           </div>`).join('')}</div>
       </div>
     </div>`;
-  nav('profile', null);
+  // Active la vue profil sans passer par nav() (qui rappellerait renderProfile → boucle infinie).
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.rail-item').forEach(r=>r.classList.remove('on'));
+  document.getElementById('v-profile')?.classList.add('on');
+  document.getElementById('topbar-title').textContent = 'Profil';
+  currentView = 'profile';
 }
 
 // ============================================================
@@ -1105,7 +1324,7 @@ function doSearch(q) {
   const ql = q.toLowerCase();
   const results = [
     ...projects.filter(p=>p.name.toLowerCase().includes(ql)||p.desc.toLowerCase().includes(ql)).map(p=>({icon:'◫',label:p.name,sub:`Projet · ${p.status}`,action:()=>openProject(p.id)})),
-    ...tasks.filter(t=>t.title.toLowerCase().includes(ql)||(t.desc||'').toLowerCase().includes(ql)).map(t=>({icon:'📋',label:t.title,sub:`Tâche · ${proj(t.pid)?.name||''}`,action:()=>openProject(t.pid)})),
+    ...tasks.filter(t=>t.title.toLowerCase().includes(ql)||(t.desc||'').toLowerCase().includes(ql)).map(t=>({icon:'📋',label:t.title,sub:`Tâche · ${esc(proj(t.pid)?.name||'')}`,action:()=>openProject(t.pid)})),
     ...members.filter(m=>m.name.toLowerCase().includes(ql)||m.role.toLowerCase().includes(ql)||m.email.toLowerCase().includes(ql)).map(m=>({icon:'👤',label:m.name,sub:m.role,action:()=>showProfile(m.id)})),
   ].slice(0,8);
   if (!results.length) { resEl.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--ink3)">Aucun résultat pour "'+q+'"</div>'; resEl.classList.add('show'); return; }
@@ -1125,7 +1344,7 @@ function exportPDF() {
   const ts2 = pid_tasks(currentProject);
   const pc2 = pct(currentProject);
   const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport — ${p.name}</title>
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rapport — ${esc(p.name)}</title>
   <style>
     body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e;max-width:800px;margin:0 auto}
     h1{font-size:28px;margin-bottom:4px}h2{font-size:18px;margin:24px 0 10px;border-bottom:2px solid #4f46e5;padding-bottom:6px;color:#4f46e5}
@@ -1143,9 +1362,9 @@ function exportPDF() {
     .pri-h{background:#fef2f2;color:#ef4444}.pri-m{background:#fefce8;color:#f59e0b}.pri-l{background:#eff6ff;color:#3b82f6}
     .footer{margin-top:40px;padding-top:16px;border-top:1px solid #e4e7f0;font-size:11px;color:#8888aa;text-align:center}
   </style></head><body>
-  <h1>${p.name}</h1>
-  <div class="meta">Rapport généré le ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} · ${ME.name} (${ME.role})</div>
-  <div style="margin-bottom:8px;color:#8888aa;font-size:13px">${p.desc}</div>
+  <h1>${esc(p.name)}</h1>
+  <div class="meta">Rapport généré le ${new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} · ${esc(ME.name)} (${ME.role})</div>
+  <div style="margin-bottom:8px;color:#8888aa;font-size:13px">${esc(p.desc)}</div>
   <div class="stat-row">
     <div class="stat-box"><div class="val">${ts2.length}</div><div class="lbl">Total tâches</div></div>
     <div class="stat-box"><div class="val" style="color:#4f46e5">${pc2}%</div><div class="lbl">Complétion</div></div>
@@ -1164,13 +1383,13 @@ function exportPDF() {
       const m2=mid(t.assignee);
       const scls=t.status==='done'?'done':t.status==='todo'?'todo':'doing';
       const pcls=t.priority==='high'?'pri-h':t.priority==='medium'?'pri-m':'pri-l';
-      return `<tr><td>${t.title}</td><td>${m2?m2.name:'—'}</td><td><span class="badge ${pcls}">${PRI_LABELS[t.priority]}</span></td><td><span class="badge ${scls}">${STATUS_LABELS[t.status]}</span></td><td>${t.tags.join(', ')||'—'}</td></tr>`;
+      return `<tr><td>${esc(t.title)}</td><td>${m2?esc(m2.name):'—'}</td><td><span class="badge ${pcls}">${PRI_LABELS[t.priority]}</span></td><td><span class="badge ${scls}">${STATUS_LABELS[t.status]}</span></td><td>${esc(t.tags.join(', ')||'—')}</td></tr>`;
     }).join('')}
   </table>
   <h2>Membres du projet</h2>
   <table>
     <tr><th>Nom</th><th>Rôle</th><th>Email</th><th>Tâches</th></tr>
-    ${p.members.map(uid=>{const m2=mid(uid);if(!m2)return'';return `<tr><td>${m2.name}</td><td>${m2.role}</td><td>${m2.email}</td><td>${ts2.filter(t=>t.assignee===uid).length}</td></tr>`;}).join('')}
+    ${p.members.map(uid=>{const m2=mid(uid);if(!m2)return'';return `<tr><td>${esc(m2.name)}</td><td>${m2.role}</td><td>${esc(m2.email)}</td><td>${ts2.filter(t=>t.assignee===uid).length}</td></tr>`;}).join('')}
   </table>
   <div class="footer">Collabify — Rapport généré automatiquement · ${new Date().toLocaleString('fr-FR')}</div>
   </body></html>`);
@@ -1194,13 +1413,13 @@ function showModal(type, payload) {
       <div class="form-row"><label class="label">Deadline</label><input class="input" id="f-deadline" type="date"/></div>
     </div>
     <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status"><option value="active">Actif</option><option value="paused">En pause</option></select></div>
-    <div class="form-row"><label class="label">Membres</label><div id="f-members-check" style="display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto">${members.filter(m=>m.id!==ME.id).map(m=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink2);padding:4px 0"><input type="checkbox" value="${m.id}" style="accent-color:var(--lime)"/>${avaHTML(m.id,22)} ${m.name} — ${m.role}</label>`).join('')}</div></div>
+    <div class="form-row"><label class="label">Membres</label><div id="f-members-check" style="display:flex;flex-direction:column;gap:6px;max-height:140px;overflow-y:auto">${members.filter(m=>m.id!==ME.id).map(m=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink2);padding:4px 0"><input type="checkbox" value="${m.id}" style="accent-color:var(--lime)"/>${avaHTML(m.id,22)} ${esc(m.name)} — ${m.role}</label>`).join('')}</div></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveProject()">Créer le projet</button></div>`;
   } else if (type==='editProject') {
     const p = proj(payload); if (!p) return;
     html = `<div class="modal-title">✏️ Modifier le projet</div>
-    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${p.name}"/></div>
-    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc">${p.desc}</textarea></div>
+    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${esc(p.name)}"/></div>
+    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc">${esc(p.desc)}</textarea></div>
     <div class="g2">
       <div class="form-row"><label class="label">Couleur</label><input class="input" id="f-color" type="color" value="${p.color}" style="height:42px;cursor:pointer"/></div>
       <div class="form-row"><label class="label">Deadline</label><input class="input" id="f-deadline" type="date" value="${p.deadline}"/></div>
@@ -1217,54 +1436,58 @@ function showModal(type, payload) {
       <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status"><option value="todo">📌 À faire</option><option value="doing">🔄 En cours</option><option value="review">👀 En revue</option><option value="done">✅ Terminé</option></select></div>
     </div>
     <div class="g2">
-      <div class="form-row"><label class="label">Projet</label><select class="select" id="f-pid">${projects.map(p=>`<option value="${p.id}"${pid&&p.id===pid?' selected':''}>${p.name}</option>`).join('')}</select></div>
-      <div class="form-row"><label class="label">Assigné à</label><select class="select" id="f-assignee">${members.map(m=>`<option value="${m.id}"${m.id===ME.id?' selected':''}>${m.name}</option>`).join('')}</select></div>
+      <div class="form-row"><label class="label">Projet</label><select class="select" id="f-pid">${projects.map(p=>`<option value="${p.id}"${pid&&p.id===pid?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="form-row"><label class="label">Assigné à</label><select class="select" id="f-assignee">${members.map(m=>`<option value="${m.id}"${m.id===ME.id?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
     </div>
     <div class="form-row"><label class="label">Tags (séparés par virgule)</label><input class="input" id="f-tags" placeholder="ex: Frontend, React"/></div>
+    <div class="form-row"><label class="label">Complexité</label><select class="select" id="f-complexity"><option value="simple">🟢 Simple</option><option value="complexe">🟣 Complexe</option></select>
+      ${!isTeacher()?'<div style="font-size:11px;color:var(--ink3);margin-top:4px">🔐 Une tâche complexe nécessite l\'autorisation de l\'enseignant — une demande sera envoyée.</div>':''}</div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveTask()">Créer la tâche</button></div>`;
   } else if (type==='editTask') {
     const t = tasks.find(x=>x.id===payload); if (!t) return;
     html = `<div class="modal-title">✏️ Modifier la tâche</div>
-    <div class="form-row"><label class="label">Titre</label><input class="input" id="f-title" value="${t.title}"/></div>
-    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc">${t.desc||''}</textarea></div>
+    <div class="form-row"><label class="label">Titre</label><input class="input" id="f-title" value="${esc(t.title)}"/></div>
+    <div class="form-row"><label class="label">Description</label><textarea class="textarea" id="f-desc">${esc(t.desc||'')}</textarea></div>
     <div class="g2">
       <div class="form-row"><label class="label">Priorité</label><select class="select" id="f-priority"><option value="high"${t.priority==='high'?' selected':''}>🔴 Haute</option><option value="medium"${t.priority==='medium'?' selected':''}>🟡 Moyenne</option><option value="low"${t.priority==='low'?' selected':''}>🔵 Faible</option></select></div>
       <div class="form-row"><label class="label">Statut</label><select class="select" id="f-status">${STATUSES.map(s=>`<option value="${s}"${s===t.status?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}</select></div>
     </div>
-    <div class="form-row"><label class="label">Assigné à</label><select class="select" id="f-assignee">${members.map(m=>`<option value="${m.id}"${m.id===t.assignee?' selected':''}>${m.name}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="label">Tags</label><input class="input" id="f-tags" value="${t.tags.join(', ')}"/></div>
+    <div class="form-row"><label class="label">Assigné à</label><select class="select" id="f-assignee">${members.map(m=>`<option value="${m.id}"${m.id===t.assignee?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="label">Tags</label><input class="input" id="f-tags" value="${esc(t.tags.join(', '))}"/></div>
+    <div class="form-row"><label class="label">Complexité</label><select class="select" id="f-complexity"${!isTeacher()?' disabled':''}><option value="simple"${t.complexity!=='complexe'?' selected':''}>🟢 Simple</option><option value="complexe"${t.complexity==='complexe'?' selected':''}>🟣 Complexe</option></select>
+      ${!isTeacher()?'<div style="font-size:11px;color:var(--ink3);margin-top:4px">🔒 Seul l\'enseignant peut changer la complexité d\'une tâche.</div>':''}</div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="updateTask('${payload}')">Enregistrer</button></div>`;
   } else if (type==='newMember') {
     html = `<div class="modal-title">👤 Ajouter un membre</div>
     <div class="form-row"><label class="label">Prénom & Nom *</label><input class="input" id="f-name" placeholder="ex: Amira Karray"/></div>
     <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" type="email" placeholder="a.karray@univ.tn"/></div>
     <div class="form-row"><label class="label">Mot de passe</label><input class="input" id="f-pass" type="password" value="collabify" placeholder="Mot de passe"/></div>
-    <div class="form-row"><label class="label">Rôle</label><select class="select" id="f-role"><option>Développeur</option><option>UX Designer</option><option>QA</option><option>DevOps</option><option>Product Owner</option><option>Scrum Master</option></select></div>
+    <div class="form-row"><label class="label">Rôle</label><select class="select" id="f-role"><option>Étudiant</option><option>Enseignant</option><option>Développeur</option><option>UX Designer</option><option>QA</option><option>DevOps</option></select></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveMember()">Ajouter</button></div>`;
   } else if (type==='editMember') {
     const m = mid(payload); if (!m) return;
     html = `<div class="modal-title">✏️ Modifier membre</div>
-    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${m.name}"/></div>
-    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" value="${m.email}"/></div>
-    <div class="form-row"><label class="label">Rôle</label><select class="select" id="f-role"><option${m.role==='Développeur'?' selected':''}>Développeur</option><option${m.role==='UX Designer'?' selected':''}>UX Designer</option><option${m.role==='QA'?' selected':''}>QA</option><option${m.role==='DevOps'?' selected':''}>DevOps</option><option${m.role==='Product Owner'?' selected':''}>Product Owner</option><option${m.role==='Scrum Master'?' selected':''}>Scrum Master</option></select></div>
+    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${esc(m.name)}"/></div>
+    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" value="${esc(m.email)}"/></div>
+    <div class="form-row"><label class="label">Rôle</label><select class="select" id="f-role"><option${m.role==='Étudiant'?' selected':''}>Étudiant</option><option${m.role==='Enseignant'?' selected':''}>Enseignant</option><option${m.role==='Développeur'?' selected':''}>Développeur</option><option${m.role==='UX Designer'?' selected':''}>UX Designer</option><option${m.role==='QA'?' selected':''}>QA</option><option${m.role==='DevOps'?' selected':''}>DevOps</option></select></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="updateMember('${payload}')">Enregistrer</button></div>`;
   } else if (type==='editProfile') {
     html = `<div class="modal-title">✏️ Modifier mon profil</div>
-    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${ME.name}"/></div>
-    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" value="${ME.email}"/></div>
+    <div class="form-row"><label class="label">Nom</label><input class="input" id="f-name" value="${esc(ME.name)}"/></div>
+    <div class="form-row"><label class="label">Email</label><input class="input" id="f-email" value="${esc(ME.email)}"/></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="saveProfileEdit()">Enregistrer</button></div>`;
   } else if (type==='addToProject') {
     const p = proj(payload);
     const nonMems = members.filter(m=>!p.members.includes(m.id));
-    html = `<div class="modal-title">👥 Inviter dans ${p.name}</div>
-    <div class="form-row"><label class="label">Sélectionner des membres</label><div style="display:flex;flex-direction:column;gap:8px">${nonMems.map(m=>`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:var(--r2);background:var(--card2);border:1px solid var(--line)">${avaHTML(m.id,28)}<span style="font-size:13px;flex:1">${m.name} — ${m.role}</span><input type="checkbox" value="${m.id}" style="accent-color:var(--lime)"/></label>`).join('')}</div></div>
+    html = `<div class="modal-title">👥 Inviter dans ${esc(p.name)}</div>
+    <div class="form-row"><label class="label">Sélectionner des membres</label><div style="display:flex;flex-direction:column;gap:8px">${nonMems.map(m=>`<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:var(--r2);background:var(--card2);border:1px solid var(--line)">${avaHTML(m.id,28)}<span style="font-size:13px;flex:1">${esc(m.name)} — ${m.role}</span><input type="checkbox" value="${m.id}" style="accent-color:var(--lime)"/></label>`).join('')}</div></div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Annuler</button><button class="btn btn-lime" onclick="addMembersToProject('${payload}')">Inviter</button></div>`;
   } else if (type==='quickCreate') {
     html = `<div class="modal-title">⚡ Créer rapidement</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newProject')"><span style="font-size:28px">◫</span>Nouveau projet</button>
+      ${isTeacher()?`<button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newProject')"><span style="font-size:28px">◫</span>Nouveau projet</button>`:''}
       <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newTask',null)"><span style="font-size:28px">📋</span>Nouvelle tâche</button>
-      <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newMember')"><span style="font-size:28px">👤</span>Nouveau membre</button>
+      ${isTeacher()?`<button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();showModal('newMember')"><span style="font-size:28px">👤</span>Nouveau membre</button>`:''}
       <button class="btn btn-ghost" style="padding:24px;flex-direction:column;gap:10px;height:auto;font-size:14px;border-radius:var(--r)" onclick="closeModal();nav('messages',null)"><span style="font-size:28px">💬</span>Messages</button>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Fermer</button></div>`;
@@ -1301,26 +1524,42 @@ async function deleteCurrentProject() {
 
 async function saveTask() {
   const title = document.getElementById('f-title')?.value.trim(); if (!title) { toast('⚠️ Titre requis'); return; }
-  await fetch(API_BASE+'/tasks/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pid:document.getElementById('f-pid')?.value||projects[0]?.id, title, desc:document.getElementById('f-desc')?.value||'', priority:document.getElementById('f-priority')?.value||'medium', status:document.getElementById('f-status')?.value||'todo', assignee:document.getElementById('f-assignee')?.value||ME.id, tags:document.getElementById('f-tags')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[]})});
+  const complexity = document.getElementById('f-complexity')?.value || 'simple';
+  const pid = document.getElementById('f-pid')?.value||projects[0]?.id;
+  const desc = document.getElementById('f-desc')?.value||'';
+  const priority = document.getElementById('f-priority')?.value||'medium';
+  const assignee = document.getElementById('f-assignee')?.value||ME.id;
+  const tags = document.getElementById('f-tags')?.value.split(',').map(s=>s.trim()).filter(Boolean)||[];
+
+  if (!isTeacher() && complexity === 'complexe') {
+    // Étudiant + tâche complexe → demande d'autorisation à l'enseignant, pas de création directe
+    await fetch(API_BASE+'/authorizations/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({student_id:ME.id, pid, title, desc, priority, assignee, tags, reason:''})});
+    closeModal(); await initData(); toast('🔐 Demande envoyée à l\'enseignant pour autorisation !');
+    return;
+  }
+
+  await fetch(API_BASE+'/tasks/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pid, title, desc, priority, status:document.getElementById('f-status')?.value||'todo', assignee, tags, complexity})});
   closeModal(); await initData(); toast('✅ Tâche créée !');
 }
 
 async function updateTask(tid) {
-  await fetch(API_BASE+'/tasks/'+tid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:document.getElementById('f-title')?.value, desc:document.getElementById('f-desc')?.value, priority:document.getElementById('f-priority')?.value, status:document.getElementById('f-status')?.value, assignee:document.getElementById('f-assignee')?.value, tags:document.getElementById('f-tags')?.value.split(',').map(s=>s.trim()).filter(Boolean)})});
+  const body = {title:document.getElementById('f-title')?.value, desc:document.getElementById('f-desc')?.value, priority:document.getElementById('f-priority')?.value, status:document.getElementById('f-status')?.value, assignee:document.getElementById('f-assignee')?.value, tags:document.getElementById('f-tags')?.value.split(',').map(s=>s.trim()).filter(Boolean)};
+  if (isTeacher()) body.complexity = document.getElementById('f-complexity')?.value; // seul l'enseignant peut changer la complexité
+  await fetch(API_BASE+'/tasks/'+tid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
   closeModal(); await initData(); toast('✅ Tâche mise à jour !');
 }
 
 async function deleteTask(tid) {
-  const t = tasks.find(x=>x.id===tid); if (!t||!confirm(`Supprimer "${t.title}" ?`)) return;
+  const t = tasks.find(x=>x.id===tid); if (!t||!confirm(`Supprimer "${esc(t.title)}" ?`)) return;
   await fetch(API_BASE+'/tasks/'+tid, {method:'DELETE'}); await initData(); toast('🗑️ Tâche supprimée');
 }
 
 async function saveMember() {
   const name = document.getElementById('f-name')?.value.trim(); if (!name) { toast('⚠️ Nom requis'); return; }
   const role = document.getElementById('f-role')?.value||'Développeur';
-  const colors = {'Développeur':'#3b82f6','UX Designer':'#ec4899','QA':'#f59e0b','DevOps':'#8b5cf6','Product Owner':'#8b5cf6','Scrum Master':'#4f46e5'};
+  const colors = {'Développeur':'#3b82f6','UX Designer':'#ec4899','QA':'#f59e0b','DevOps':'#8b5cf6','Étudiant':'#8b5cf6','Enseignant':'#4f46e5'};
   await fetch(API_BASE+'/members/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, role, email:document.getElementById('f-email')?.value||'', password:document.getElementById('f-pass')?.value||'collabify', color:colors[role]||'#8888aa'})});
-  closeModal(); await initData(); nav('members',null); toast(`✅ ${name} ajouté(e) !`);
+  closeModal(); await initData(); nav('members',null); toast(`✅ ${esc(name)} ajouté(e) !`);
 }
 
 async function updateMember(uid) {
@@ -1362,6 +1601,7 @@ function updateRailCounts() {
   const rpc = document.getElementById('rail-proj-count'); if (rpc) rpc.textContent = projects.length;
   const rtc = document.getElementById('rail-task-count'); if (rtc) rtc.textContent = tasks.filter(t=>t.assignee===ME.id&&t.status!=='done').length;
   const rmc = document.getElementById('rail-msg-count'); if (rmc) rmc.textContent = Object.values(messages).reduce((a,msgs)=>a+msgs.length,0);
+  const rac = document.getElementById('rail-auth-count'); if (rac) rac.textContent = authRequests.filter(r=>r.status==='pending').length;
 }
 
 // ============================================================
